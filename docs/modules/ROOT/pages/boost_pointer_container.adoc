@@ -1,0 +1,72 @@
+== Boost.PointerContainer
+
+Boost.PointerContainer kütüphanesi, dinamik olarak tahsis edilmiş nesneleri yönetmek için özelleştirilmiş containers sağlar. Örneğin, C + + 11 ile böyle bir kap oluşturmak için std::vector<std::unique_ptr<int>>  kullanabilirsiniz. Ancak, Boost.PointerContainer konteynırları ekstra konfor sağlayabilir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/ptr_container/ptr_set.hpp>
+#include <boost/ptr_container/indirect_fun.hpp>
+#include <boost/ptr_container/ptr_inserter.hpp>
+#include <set>
+#include <memory>
+#include <functional>
+#include <iostream>
+
+int main() {
+    boost::ptr_vector<int> vektor;//boost: ptr_vector sınıfı temel olarak std::vector<std::unique_ptr<int>> gibi çalışır
+    vektor.push_back(new int{1});//vektorun sonuna 1 eklemesi gerekir
+    vektor.push_back(new int{2});
+    //Ancak, boost::ptr_vector dinamik olarak ayrılmış nesneleri depoladığını bildiğinden, back() gibi fonksiyonlar, dinamik
+    //olarak ayrılmış bir nesneye bir işaretçi değil, bir başvuru döndürür. Böylece, örnek 2 standart çıktıya yazar.
+    std::cout << vektor.back() << '\n'; //2
+
+    std::cout << "----\n";
+
+    /*int türünde dinamik olarak ayrılmış değişkenleri bir boost::ptr_set ve bir std::set içinde saklar.
+     std::set, std :: unique_ptr ile birlikte kullanılır.*/
+    boost::ptr_set<int> s;
+    s.insert(new int{2});//boost::ptr_set ile, öğelerin sırası int değerlerine bağlıdır
+    s.insert(new int{1});//s'ye yeni değerler ekler
+    std::cout << *s.begin() << '\n';
+
+    std::set<std::unique_ptr<int>, boost::indirect_fun<std::less<int>>> v;//std::set, işaretçilerin başvurduğu değişkenleri değil,
+    //std::unique_ptr türündeki işaretçileri karşılaştırır.
+    //boost::indirect_fun (Boost.PointerContainer tarafından sağlanır) kullanılır.
+    //boost::indirect_fun ile std::set, öğelerin std::unique_ptr türündeki göstergelere göre sıralanmaması,
+    // bunun yerine işaretçilerin başvurduğu int değerlerine göre sıralanması gerektiği söylenir. Bu yüzden örnek 1'i iki kez görüntüler.
+
+    v.insert(std::unique_ptr<int>(new int{2}));
+    v.insert(std::unique_ptr<int>(new int{1}));
+    std::cout << **v.begin() << '\n';
+
+    std::cout<<"----\n";
+
+    boost::ptr_vector<int> v2;
+    std::array<int, 3> a{{0, 1, 2}};
+    std::copy(a.begin(), a.end(), boost::ptr_container::ptr_back_inserter(v2));
+    /*boost::ptr_container::ptr_back_insert_iterator
+     türünde bir ekleyici oluşturan boost::ptr_container::ptr_back_inserter() fonksiyonunu kullanır.
+     Bu ekleyici, a dizisindeki tüm sayıları v vektörüne kopyalamak için std::copy () fonksiyonuna iletilir.
+     v, dinamik olarak ayrılmış int nesnelerinin adreslerini bekleyen boost::ptr_vector türünde bir containers olduğundan,
+     ekleyici Yığın üzerinde yeni ve adresleri container'a ekler.*/
+    std::cout << v2.size() << '\n';//v2 vektorunun boyutunu verir
+}
+----
+
+
+Ekran Çıktısı:
+
+ 2
+ ----
+ 1
+ 1
+ ----
+ 3
+
+
+boost::ptr_vector ve boost::ptr_set'in yanı sıra, dinamik olarak ayrılmış nesneleri yönetmek için kullanılabilecek başka containers da vardır. Bu ek kaplara örnek olarak boost::ptr_deque, boost::ptr_list, boost::ptr_map, boost::ptr_unordered_set, ve boost::ptr_unordered_map. verilebilir.
+}

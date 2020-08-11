@@ -1,0 +1,98 @@
+== Boost.Accumulators
+
+Boost.Accumulators örnekleri işlemek için sınıflar sağlarlar. Örneğin, en büyük veya en küçük örneği bulabilir veya tüm örneklerin toplamını hesaplayabilirsiniz. Standart kütüphane bu işlemlerin bazılarını desteklerken, Boost.Accumulators ortalama ve standart sapma gibi istatistiksel hesaplamaları da destekler.
+
+Bir akümülatör, bir değer her eklendiğinde yeni bir sonuç hesaplayan bir kapsayıcıdır. Değer mutlaka akümülatörde saklanmaz. Bunun yerine, akümülatör, yeni değerler beslendiğinden aracı sonuçları sürekli olarak günceller.
+
+
+Boost.Accumulators'e her değer eklendiğinde yeni bir sonuç hesaplayan bir yapıdır. Değerler akümülatörde depolanmaz. Bunun yerine akümülatör, yeni değerler verildiği için ara sonuçları sürekli olarak günceller.
+
+
+Boost.Accumulators üç bölüm içerir:
+
+* Framework kütüphanenin genel yapısını kullanır. 
+Her zaman Boost.Accumulators ile kullanılan boost::accumulators::accumulator_set sınıfını sağlar. Başlık  dosyası boost/accumulators/accumulators.hpp, framework'ten boost::accumulators::accumulator_set ve diğer sınıflara erişmenizi sağlar.
+
+* Boost.Accumulators hesaplamalar yapan çok sayıda akümülatör sağlar. boost/accumulators/statistics.hpp sayfanın başına ekledikten sonra bu akümülatörlerin tümüne erişebilir ve kullanabilirsiniz.
+
+* Boost.Accumulators, std::complex türünün karmaşık bir sayıyı int değeriyle çarpmasını veya iki vektör eklenmesini sağlar. Dosya başına boost/accumulators/numeric/functional.hpp, std::complex, std::valarray ve std::vector operatörlerini tanımlar. Akümülatörlerin başlık dosyalarına dahil edildiğinden başlık dosyasını kendiniz eklemenize gerek yoktur. Ancak, operatörleri kullanılabilir duruma getirmek için BOOST_NUMERIC_FUNCTIONAL_STD_COMPLEX_SUPPORT, BOOST_NUMERIC_FUNCTIONAL_STD_VALARRAY_SUPPORT ve BOOST_NUMERIC_FUNCTIONAL_STD_VECTOR_SUPPORT makrolarını tanımlamanız gerekir.
+
+Boost tarafından sağlanan tüm sınıflar ve fonksiyonlar  boost::accumulators etiketinde tanımlanır.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <iostream>
+
+using namespace boost::accumulators;
+
+int main()
+{
+  accumulator_set<int, features<tag::count>> acc;//boost::accumulators::tag::count= kendisine iletilen değerlerin sayısını sayan basit bir akümülatördür
+  /*Bir akümülatör kullanmak için, ilk parametrede işlenecek değerlerin türünü bekleyen bir şablon olan boost::accumulators::accumulator_set
+   sınıfına erişirsiniz. Örnekte, ilk parametre olarak int değerini geçer.
+  İkinci parametre kullanmak istediğiniz akümülatörleri belirtir. Birden fazla akümülatör kullanabilirsiniz.*/
+
+  //boost::accumulators::accumulator_set değerini artırmak için özellikleri doğrudan işlem yapamaz.
+  // Boost::accumulators::features kullanmanız gerekir.
+  acc(4);//accumulator_set'e 4 sayısı gönderilir.
+  acc(-6);
+  acc(9);
+  std::cout << count(acc) << '\n';//3 defa değer gönderildiği için çıktı olarak 3 sayısını verir.
+
+  std::cout<<"-------\n";
+  accumulator_set<double, features<tag::mean, tag::variance>> acc2;//işlenecek verinin tipi double'dır.
+  // tag::mean= ortalama ,tag::variance= varyans işlemleri için kullanılır
+  acc2(8);
+  acc2(9);
+  acc2(10);
+  acc2(11);
+  acc2(12);//acc2 fonksiyonuna 5 değer gönderilir
+  std::cout << mean(acc2) << '\n';//Ortalamayı hesaplar ve ekrana yazar
+  std::cout << variance(acc2) << '\n';//Varyansı hesaplar ve ekrana yazar
+
+  std::cout<<"-------\n";
+  accumulator_set<double, features<tag::mean, tag::variance>, int> acc3;//işlenecek verinin tipi double'dır.
+/// tag::mean= ortalama ,tag::variance= varyans işlemleri için kullanılır
+  acc3(8, weight = 1);
+  acc3(9, weight = 1);
+  acc3(10, weight = 4);
+  acc3(11, weight = 1);
+  acc3(12, weight = 1);
+  std::cout << mean(acc3) << '\n';//Ortalamayı hesaplar ve ekrana yazar
+  std::cout << variance(acc3) << '\n';//Varyansı weight değerlerine göre hesaplar ve ekrana yazar
+}
+----
+
+
+Ekran Çıktısı:
+ 
+ 3
+ -------
+ 10
+ 2
+ -------
+ 10
+ 1.25
+
+
+Örnekte, kendisine iletilen değerlerin sayısını sayan basit bir akümülatör olan boost::accumulators::tag::count kullanır. Bu nedenle, üç değer iletildiğinden, bu örnek 3'ü standart çıktıya yazar. Bir akümülatör kullanmak için, ilk parametrede işlenecek değerlerin türünü bekleyen bir şablon olan boost::accumulators::accumulator_set sınıfına erişirsiniz. Örnekte, ilk parametre olarak int değerini geçer.
+
+İkinci parametre kullanmak istediğiniz akümülatörleri belirtir. Birden fazla akümülatör kullanabilirsiniz. Sınıf adı boost::accumulators::accumulator_set, herhangi bir sayıda akümülatörün yönetilebileceğini gösterir.
+
+
+Örnekte, değerleri sayan bir akümülatör seçmek için boost::accumulators::tag::count kullanır. Değerleri sayabilen birkaç akümülatör varsa, Boost.Accumulators varsayılan akümülatörü seçer.
+
+boost::accumulators::accumulator_set değerini artırmak için özellikleri doğrudan işlem yapamaz. Boost::accumulators::features kullanmanız gerekir.
+
+Boost::accumulators::accumulator_set türünde bir nesne bir fonksiyon gibi kullanılabilir. Değerler operator() ile çağrılarak iletilebilir. Hemen işlenirler. Aktarılan değerler, boost::accumulators::accumulator_set değerini ilk parametresi ile  aynı türde olmalıdır.
+Her özellik için, aynı adlı bir çıkarıcı vardır. Bir çıkarıcı, bir akümülatörün mevcut sonucunu alır.
+
+Beş değerin ortalamasını ve varyansını hesaplamak için boost::accumulators::tag::mean ve boost::accumulators::tag::variance özellikleri kullanılır. Örnek 10 ve 2'yi standart çıktıya yazar.
+
+Varyans 2'dir çünkü Boost.Accumulators beş değerin her birine 0.2 ağırlık atar. Boost::accumulators::tag::variance ile seçilen akümülatör ağırlıkları kullanır. Ağırlıklar açıkça ayarlanmazsa, tüm değerlere aynı ağırlık verilir.
+ 

@@ -1,0 +1,200 @@
+== Boost.Atomic
+
+Boost.Atomic, atomik değişkenler oluşturmak için kullanılabilen boost::atomic sınıfını sağlar. Bunlara atomik değişkenler denir çünkü tüm erişim atomiktir. Bir thread'i bir değişkene erişimin aynı değişkene erişen başka bir thread tarafından kesilmemesi gerektiğinde atomik çoklu thread programlarda kullanılır. Boost::atomic olmadan, birden çok thread ile paylaşılan değişkenlere erişim girişimlerinin kilitlerle senkronize edilmesi gerekir.
+
+Boost::atomic, atomik değişken erişimi destekleyen hedef platforma bağlıdır. Aksi takdirde, boost::atomic kilitleri kullanır. Kütüphane, bir hedef platformun atomik değişken erişimi destekleyip desteklemediğini tespit etmenizi sağlar.
+
+Geliştirme ortamınız C + + 11'i destekliyorsa, Boost.Atomic'e ihtiyacınız yoktur. C + + 11 standart kitaplığı, Boost.Atomic ile aynı işlevselliği tanımlayan bir başlık dosyası atomu sağlar. Örneğin, std::atomic adlı bir sınıf bulacaksınız.
+
+Atomik, standart kütüphaneyle hemen hemen aynı işlevselliği destekler. Boost.Atomic'te birkaç fonksiyon aşırı yüklenmiş olsada, standart kitaplıkta farklı adlara sahip olabilirler. Standart kitaplık, Boost.Atomic'te eksik olan std::atomic_init() ve std::kill_dependency() gibi bazı fonksiyonlarda sağlar.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/atomic.hpp>
+#include <thread>
+#include <iostream>
+
+boost::atomic<int> sayi{0};//boost::atomic türünde int tipinde sayi değişkeni tanımlanır.
+
+
+void thread()
+{
+    ++sayi;//thread her çağırıldığında sayi değişkenini bir arttırır.
+}
+
+void thread2()
+{
+    sayi.fetch_add(3, boost::memory_order_seq_cst);//fetch_add() fonksiyonu her çağırıldığında 3 kez arttırma işlemi yapar.
+    //fetch_add() fonksiyonu iki parametre alabilir: birincisi parametre sayi değişkeninin artırılması gereken sayı ikincisi bellek sırası.
+    //boost::memory_order_seq_cst: bellek sırasını ayarlar.
+}
+
+int main()
+{
+    std::thread t1{thread};//t1 thread'i çağırılır
+    std::thread t2{thread};//t2 thread'i çağırılır
+    t1.join();
+    t2.join();
+    //join(): main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+    std::cout << sayi << '\n';
+
+
+    std::cout<<"--------\n";
+    std::cout.setf(std::ios::boolalpha);//Sonucun 0-1 olarak değil true-false olarak yazdırılmasını sağlar.
+
+    boost::atomic<short> s;
+    std::cout << s.is_lock_free() << '\n';
+
+    boost::atomic<int> i;
+    std::cout << i.is_lock_free() << '\n';
+
+    boost::atomic<long> l;
+    std::cout << l.is_lock_free() << '\n';
+
+    /*Bir değişkene erişimin kilit olmadan yapılıp yapılmadığını kontrol etmek için bir atomik değişken üzerinde
+     is_lock_free() fonksiyonu kullanılır. short, int ve long değişken tiplerinde kilitsiz erişime sahip olmayan bir
+     işlemcide çalıştırırsanız, false görüntülenir.*/
+
+    std::cout<<"--------\n";
+
+    std::thread t3{thread2};//t3 thread'i çağırılır
+    std::thread t4{thread2};//t4 thread'i çağırılır
+    t3.join();
+    t4.join();
+    std::cout << sayi << '\n';
+}
+----
+
+Ekran Çıktısı:
+ 
+ 2
+ --------
+ true
+ true
+ true
+ --------
+ 8
+
+
+
+Örnekte int değişkenini a artırmak için iki thread kullanır. Bir kilit yerine, a'ya atomik erişim için boost::atomic kullanılır.
+
+Örnekte boost::atomic çalışır çünkü bazı işlemciler değişkenler üzerinde atomik erişimi destekler. Bir int değişkenini artırmak atomik bir işlemdir, bir kilit gerekli değildir. Bu örnek, bir değişkeni atomik bir işlem olarak artıramayan bir platformda çalıştırılırsa, boost::atomic bir kilit kullanır.
+
+
+Bir değişkene erişimin kilit olmadan yapılıp yapılmadığını kontrol etmek için bir atomik değişken üzerinde is_lock_free() fonksiyonu kullanılır. short, int ve long değişken tiplerinde kilitsiz erişime sahip olmayan bir işlemcide çalıştırırsanız, false görüntülenir.
+
+[IMPORTANT]
+====
+Boost.Atomic, derleme zamanında hangi veri türlerinin kilitsiz erişimi desteklediğini kontrol etmek için BOOST_ATOMIC_INT_LOCK_FREE ve BOOST_ATOMIC_LONG_LOCK_FREE kullanımı sağlar.
+====
+
+Örnekte, yalnızca tümleşik veri türlerini kullanır. Boost::atomic'i std::string veya std::vector gibi sınıflarla kullanmamalısınız. Atomik tamsayıları, işaretçileri, booleans(bool) ve önemsiz sınıfları destekler. İntegral tiplere örnek olarak short, int ve long verilebilir. Küçük,önemsiz sınıflar std::memcpy() ile kopyalanabilen nesneleri tanımlar.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/atomic.hpp>
+#include <thread>
+#include <iostream>
+
+boost::atomic<int> sayi{0};
+int x = 0;
+
+//En kısıtlayıcı bellek sırası, boost::memory_order_seq_cst ve en az kısıtlayıcı olan boost::memory_order_relaxed gibi kullanımlar vardır.
+void thread1()
+{
+    x = 1;
+    sayi.store(1, boost::memory_order_release);//boost::memory_order_release, sayi değişkenindeki bellek erişiminden önce
+    // x'deki bellek erişiminin gerçekleşmesini garanti eder.
+}
+//thread1() fonksiyonuna erişirken bir bellek sırası belirlemek için store() fonksiyonu çağrılır.
+// Bu fonksiyon, eşitlik (=)operatörüne karşılık gelir.
+
+void thread2()
+{
+    while (sayi.load(boost::memory_order_acquire) != 1)//İkinci thread bir döngüde okur. Bu işlem load() fonksiyonu ile yapılır.
+        // Yine, hiçbir atama operatörü kullanılmaz.
+        ;
+    std::cout << x << '\n';
+}
+//İkinci thread'de boost::memory_order_acquire, x üzerindeki bellek erişiminin sayi üzerindeki bellek erişiminden önce gerçekleşmemesini sağlar. İkinci thread, ilk thread tarafından sayi değişkeninin 1'e ayarlanması için döngüde bekler. Bu gerçekleştiğinde, x okunur
+//Boost::memory_order_release ifadesinden önce kodda görünen bellek erişimleri boost::memory_order_release ifadesi yürütülmeden önce yürütülür.
+
+int main()
+{
+    std::thread t1{thread1};//t1 thread'i çağırılır
+    std::thread t2{thread2};//t2 thread'i çağırılır
+    t1.join();
+    t2.join();
+    //join(): main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+}
+----
+
+
+
+Ekran Çıktısı:
+
+ 1
+
+
+
+En kısıtlayıcı bellek sırası, boost::memory_order_seq_cst ve en az kısıtlayıcı olan boost::memory_order_relaxed arasında seçenekler vardır. Örnekte, bellek::boost_order_release ve boost::memory_order_acquire bellek emirlerini verir.
+
+Boost::memory_order_release ifadesinden önce kodda görünen bellek erişimleri boost::memory_order_release ifadesi yürütülmeden önce yürütülür. Derleyiciler ve işlemciler, bellek erişimlerini boost::memory_order_release öncesinden sonrasına taşımamalıdır. Ancak, bellek erişimlerini boost::memory_order_release öncesinden diğerine taşıyabilirler.
+
+Boost::memory_order_acquire boost::memory_order_release gibi çalışır, ancak boost::memory_order_acquire sonrasında bellek erişimlerini ifade eder. Derleyiciler ve işlemciler, boost::memory_order_acquire deyiminden sonra bellek erişimlerini ondan önce taşımamalıdır. Ancak, bellek erişimlerini boost::memory_order_acquire öncesinden sonrasına taşıyabilirler.
+
+Örnekte, sayi değişkeninin 1 olarak ayarlanmadan önce x'in 1 olarak ayarlandığından emin olmak için ilk thread boost::memory_order_release kullanır. Boost::memory_order_release, sayi değişkenindeki bellek erişiminden önce x'deki bellek erişiminin gerçekleşmesini garanti eder.
+
+thread1() fonksiyonuna erişirken bir bellek sırası belirlemek için store() fonksiyonu çağrılır. Bu fonksiyon, eşitlik (=)operatörüne karşılık gelir.
+
+İkinci thread bir döngüde okur. Bu işlem load() fonksiyonu ile yapılır.Yine, hiçbir atama operatörü kullanılmaz.
+
+İkinci thread'te, boost::memory_order_acquire, x üzerindeki bellek erişiminin sayi üzerindeki bellek erişiminden önce gerçekleşmemesini sağlar. İkinci thread, ilk thread tarafından sayi değişkeninin 1'e ayarlanması için döngüde bekler. Bu gerçekleştiğinde, x okunur.
+
+Örnekte çıktıya 1 yazar. Bellek siparişleri, tüm bellek erişimlerinin doğru sırada yapılmasını sağlar. İlk thread, ikinci thread'in x'ye erişip okumadan önce her zaman önce 1'den x'ye yazar.
+
+Kodların doğru bir şekilde çalışması için CMakeLists.txt dosyası aşağıdaki gibi düzenlenmelidir.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(sample2)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/asli/Downloads/boost_1_71_0/")
+
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+find_package(Boost 1.71.0
+        REQUIRED date_time filesystem system iostreams thread unit_test_framework
+        ${BOOST_PYTHON})
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample2 main.cpp)
+
+target_link_libraries(sample2  ${Boost_LIBRARIES})
+----
+
+
+
+
+

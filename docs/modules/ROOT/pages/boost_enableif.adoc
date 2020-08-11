@@ -1,0 +1,70 @@
+== Boost.EnableIf
+
+Boost.EnableIf aşırı yüklenmiş fonksiyon şablonlarını veya özel sınıf şablonlarını devre dışı bırakmayı mümkün kılar. Devre dışı bırakma, derleyicinin ilgili şablonları yok saydığı anlamına gelir. Bu, derleyicinin hangi aşırı yüklenmiş fonksiyon şablonunun kullanılacağını bilmediği belirsiz senaryoları önlemeye yardımcı olur. Ayrıca, yalnızca belirli bir tür için değil, bir grup türü için de kullanılabilecek şablonları tanımlamayı kolaylaştırır.
+
+C + + 11'den beri, Boost.EnableIf standart kütüphanenin bir parçası olmuştur. Bir Boost kütüphanesi kullanmadan bu bölümde sunulan işlevleri çağırabilirsiniz; Type_traits başlığını dosyaya eklemeniz yeterlidir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/utility/enable_if.hpp>
+#include <type_traits>
+#include <string>
+#include <iostream>
+
+template <typename T>
+typename boost::enable_if<std::is_same<T, int>, T>::type create()
+{
+    return 1;
+}
+
+template <typename T>
+typename boost::enable_if<std::is_same<T, std::string>, T>::type create()
+{
+    return "Boost";
+}
+
+template <typename T>
+void print(typename boost::enable_if<std::is_integral<T>, T>::type i)
+{
+    std::cout << "Integral: " << i << '\n';
+}
+
+template <typename T>
+void print(typename boost::enable_if<std::is_floating_point<T>, T>::type f)
+{
+    std::cout << "Floating point: " << f << '\n';
+}
+
+int main()
+{
+    std::cout << create<std::string>() << '\n';//"Boost" 'u return eder
+
+    std::cout << create<int>() << '\n';//1 'i return eder
+
+    print<short>(1);//is_integral değerlidir
+    print<long>(2);//is_integral değerlidir
+    print<double>(3.14);//is_floating_point değerlidir
+
+}
+----
+
+Ekran Çıktısı:
+
+ Boost
+ 1
+ Integral: 1
+ Integral: 2
+ Floating point: 3.14
+
+Örnekte, şablon parametresi olarak iletilen türde bir nesneyi döndüren create() fonksiyon şablonunu tanımlar. Nesne, hiçbir parametreyi kabul etmeyen create() öğesinde başlatılır. İki create() fonksiyonunun imzaları farklı değildir. Aşırı yüklü değiller. Bu bakımdan, create() fonksiyonu aşırı yüklenmiş bir işlev değildir. Boost.EnableIf bir işlevi etkinleştirmez ve diğerini devre dışı bırakmazsa derleyici bir hata bildirir.
+
+Boost.EnableIf, iki parametre bekleyen bir şablon olan boost::enable_if sınıfını sağlar. İlk parametre bir koşuldur. İkinci parametre, koşul doğruysa boost::enable_if ifadesinin türüdür. İşin püf noktası, koşul yanlışsa bu türün mevcut olmamasıdır; bu durumda boost::enable_if ifadesi geçersiz C + + kodu olur. Ancak, şablonlar söz konusu olduğunda, derleyici geçersiz koddan şikayet etmez. Bunun yerine şablonu yoksayar ve sığabilecek başka bir şablon arar. Bu kavram, “Substitution Failure Is Not An Error.” anlamına gelen SFINAE olarak bilinir.
+
+Örnekte'de boost::enable_if ifadelerindeki her iki koşul da std::is_same sınıfını kullanır. Bu sınıf, C + + 11 standart kitaplığında tanımlanmıştır ve iki türü karşılaştırmanıza olanak tanır. Böyle bir karşılaştırma doğru veya yanlış olduğundan, bir koşulu tanımlamak için std::is_same kullanmak yeterlidir.
+
+Koşul doğruysa, ilgili create() fonksiyonu, create() öğesine geçirilen türden bir nesneyi şablon parametresi olarak döndürmelidir. Bu nedenle T, boost::enable_if'i artırmak için ikinci bir parametre olarak geçirilir. Koşul doğruysa, boost::enable_if ifadesinin tamamı T ile değiştirilir. Örnekte derleyici, int döndüren bir işlevi veya std::string döndüren bir işlevi görür. Create(), int veya std::string dışında herhangi bir türle çağrılırsa, derleyici bir hata bildirir.
+
+
+

@@ -1,0 +1,183 @@
+== Boost.SmartPointers
+
+Boost.SmartPointers kütüphanesi çeşitli akıllı işaretçiler sağlar. Bunlar, dinamik olarak tahsis edilen nesneleri yıkıcıda serbest bırakan akıllı işaretlere tutturulmuş dinamik olarak tahsis edilmiş nesneleri yönetmenize yardımcı olur. Yıkıcılar, akıllı işaretçilerin kapsamı sona erdiğinde yürütüldüğünden, dinamik olarak ayrılmış nesneleri serbest bırakma garanti edilir. Örneğin, silme işlemini çağırmayı unutursanız, bellekte sızıntısı olamaz.
+
+Standart kütüphane, C + + 98'den beri std::auto_ptr akıllı işaretçisini içeriyordu, ancak C + + 11'den beri std::auto_ptr kullanımdan kaldırıldı. C + + 11 ile standart kütüphaneye yeni ve daha iyi akıllı işaretçiler eklendi. Std::shared_ptr ve std::poor_ptr, Boost.SmartPointers kökenlidir ve bu kütüphanede boost::shared_ptr ve boost::weak_ptr olarak adlandırılır. Std::unique_ptr için bir karşılık yoktur. Bununla birlikte, Boost.SmartPointers dört ek akıllı işaretçi sağlar - standart kütüphanede olmayan boost::scoped_ptr, boost::scoped_array, boost::shared_array ve boost::intrusive_ptr.
+
+==== Sole Ownership
+
+Boost::scoped_ptr, dinamik olarak tahsis edilen bir nesnenin tek sahibi olan akıllı bir işaretçidir. Boost::scoped_ptr kopyalanamaz veya taşınamaz. Bu akıllı işaretçi boost/scoped_ptr.hpp satırı ile dosyanın başında tanımlanmalıdır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/scoped_ptr.hpp>
+#include <boost/scoped_array.hpp>
+#include <iostream>
+
+int main()
+{
+    boost::scoped_ptr<int> p{new int{1}};
+    //boost::scoped_ptr türünde akıllı bir işaretçi bir nesnenin sahipliğini devredemez.
+    std::cout << *p << '\n';
+    p.reset(new int{2});
+    //Bir adresle başlatıldıktan sonra, yıkıcı yürütüldüğünde veya  reset() fonksiyonu çağrıldığında
+    //dinamik olarak ayrılmış nesne serbest bırakılır.
+    std::cout << *p.get() << '\n';//boost::scoped_ptr int türünde bir akıllı işaretçi p kullanır.
+    //p, 1 sayısını depolayan dinamik olarak tahsis edilmiş bir nesneye bir işaretçi ile başlatılır. * operatörü ile
+    // p referansı alınır ve 1 standart çıktıya yazılır.
+    p.reset();//reset() fonksiyonu ile, p'de o anda başvurulan nesne otomatik olarak yok edilir.
+    std::cout << std::boolalpha << static_cast<bool>(p) << '\n';
+    //akıllı işaretçi bir nesneye başvuru içeriyorsa (yani boş değilse), bool true değerini döndürür.
+    //reset() fonksiyonu ile p sıfırlandığı için standart çıktıya false yazar.
+
+    //get() fonksiyonu akıllı işaretçiye sabitlenen nesnenin adresini döndürür.
+
+    std::cout<<"----\n";
+    boost::scoped_array<int> p2{new int[2]};
+    *p2.get() = 1;//get() fonksiyonun ile adres bulunur ve adresin bulunduğu değere 1 atanır
+    p2[1] = 2;
+    p2.reset(new int[3]);
+
+    /*NOT:boost::scoped_ptr imha edici, başvurulan nesneyi delete[] ile serbest bırakır.
+     Bu nedenle boost::scoped_ptr, delete[] ile serbest bırakılması gereken dinamik olarak ayrılmış bir dizinin
+     adresiyle başlatılmamalıdır.*/
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 2
+ false
+ ----
+
+boost::scoped_ptr türünde akıllı bir işaretçi bir nesnenin sahipliğini devredemez. Bir adresle başlatıldıktan sonra, yıkıcı yürütüldüğünde veya  reset() fonksiyonu çağrıldığında dinamik olarak ayrılmış nesne serbest bırakılır.
+
+Örnekte, boost::scoped_ptr int türünde bir akıllı işaretçi p kullanır. p, 1 sayısını depolayan dinamik olarak tahsis edilmiş bir nesneye bir işaretçi ile başlatılır. * operatörü ile p referansı alınır ve 1 standart çıktıya yazılır.
+
+reset() fonksiyonu ile akıllı işaretçiye yeni bir adres kaydedilebilir. Bu şekilde örnek, 2'den p'ye kadar olan yeni tahsis edilen int nesnesinin adresini geçirir. reset() fonksiyonu ile, p'de o anda başvurulan nesne otomatik olarak yok edilir.
+
+get() akıllı işaretçiye sabitlenen nesnenin adresini döndürür. Örnek, get() tarafından döndürülen adresin standart çıktıya 2 yazmak için referansını kaldırır.
+
+boost::scoped_ptr operator() operatör boolunu aşırı yükler. akıllı işaretçi bir nesneye başvuru içeriyorsa (yani boş değilse), bool true değerini döndürür. Örnek,  reset() fonksiyonu ile p sıfırlandığı için standart çıktıya false yazar.
+
+Boost::scoped_ptr imha edici, başvurulan nesneyi delete[] ile serbest bırakır. Bu nedenle boost::scoped_ptr, delete[] ile serbest bırakılması gereken dinamik olarak ayrılmış bir dizinin adresiyle başlatılmamalıdır. Diziler için Boost.SmartPointers boost::scoped_array sınıfını sağlar.
+
+
+Boost::scoped_array, operator[] ve bool için aşırı yüklü fonksiyonlar sağlar. operator[] kullanılarak, dizinin belirli bir öğesine erişilebilir. Bu nedenle, boost::scoped_array türünde bir nesne, sahip olduğu dizi gibi davranır. Örneğin ikinci bölümünde, 2 sayısını p ile belirtilen dizideki ikinci eleman olarak kaydeder.
+
+Boost::scoped_ptr gibi, fonksiyonların içerdiği nesnenin adresini almak ve yeniden başlatmak için get() ve reset() fonksiyonlarını kullanır.
+
+
+==== Shared Ownership
+
+Akıllı işaretçi boost::shared_ptr boost::scoped_ptr işlevine benzer. Temel fark, boost::shared_ptr'in bir nesnenin sahibi olmamasıdır. Sahiplik, boost::shared_ptr türündeki diğer akıllı işaretçilerle paylaşılabilir. Böyle bir durumda, paylaşılan nesne, nesneyi referans alan paylaşılan işaretçinin son kopyası yok edilene kadar serbest bırakılmaz. Boost::shared_ptr sahipliği paylaşabildiğinden, akıllı işaretçi kopyalanabilir, bu da boost::scoped_ptr ile mümkün değildir.
+
+Boost::shared_ptr boost/shared_ptr.hpp başlık dosyasında tanımlanır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/shared_ptr.hpp>
+#include <iostream>
+
+int main()
+{
+    //boost::shared_ptr türünde p1 ve p2 olmak üzere iki akıllı işaretçi kullanır.
+  boost::shared_ptr<int> p1{new int{1}};
+  std::cout << *p1 << '\n';
+  boost::shared_ptr<int> p2{p1};//p2, p1 ile başlatılır, yani her iki akıllı işaretçi de aynı int nesnesinin sahipliğini paylaşır.
+
+  std::cout << *p1.get() << '\n';//p1'de reset() çağrıldığında, p1'e yeni bir int nesnesi bağlanır.
+  //Bu, mevcut int nesnesinin yok edildiği anlamına gelmez. p2'de de bağlantılı olduğu için var olmaya devam eder.
+
+  p1.reset(new int{2});//reset() fonksiyonu çalıştırıldıktan sonra p1, 2 numaralı int nesnesinin tek sahibidir ve p2,
+  // 1 numaralı int nesnesinin tek sahibidir.
+  p1.reset();
+  std::cout << std::boolalpha << static_cast<bool>(p2) << '\n';//p2'yi std::boolalpha tipinde yazdırır
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 1
+ true
+
+
+Örnekte, boost::shared_ptr türünde p1 ve p2 olmak üzere iki akıllı işaretçi kullanır. p2, p1 ile başlatılır, yani her iki akıllı işaretçi de aynı int nesnesinin sahipliğini paylaşır. p1'de reset() çağrıldığında, p1'e yeni bir int nesnesi bağlanır. Bu, mevcut int nesnesinin yok edildiği anlamına gelmez. p2'de de bağlantılı olduğu için var olmaya devam eder. reset() fonksiyonu çalıştırıldıktan sonra p1, 2 numaralı int nesnesinin tek sahibidir ve p2, 1 numaralı int nesnesinin tek sahibidir.
+
+Boost::shared_ptr dahili olarak bir referans sayacı kullanır. Yalnızca boost::shared_ptr, akıllı işaretçinin son kopyasının imha edildiğini algılarsa, delete ile serbest bırakılan içerilen nesne olur.
+
+İkinci bir parametre olarak, boost::shared_ptr yapıcısına bir silici iletilebilir. Silici, tek parametresi olarak boost::shared_ptr türünün örneklendiği bir işaretçiyi kabul eden bir fonksiyon veya fonksiyon nesnesi olmalıdır. Silici, silme yerine yıkıcıda çağrılır. Bu, bir boost::shared_ptr dosyasında dinamik olarak ayrılmış nesneler dışındaki kaynakları yönetmeyi mümkün kılar.
+
+
+
+==== Special Smart Pointers (Özel Akıllı İşaretçiler)
+
+Şimdiye kadar tanıtılan her akıllı işaretçi farklı senaryolarda ayrı ayrı kullanılabilir. Ancak, boost::weak_ptr yalnızca boost::shared_ptr ile birlikte kullanıldığında anlamlıdır. boost::weak_ptr boost/weak_ptr.hpp içinde tanımlanır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
+#include <thread>
+#include <functional>
+#include <iostream>
+
+void reset(boost::shared_ptr<int> &sh)
+{
+  sh.reset();
+}
+
+void print(boost::weak_ptr<int> &w)//boost::weak_ptr  bir boost::shared_ptr ile başlatılmalıdır.
+{
+  boost::shared_ptr<int> sh = w.lock();//lock() fonksiyonu, zayıf işaretçiyi başlatmak için kullanılan, paylaşılan
+  // işaretçiyle sahipliği paylaşan bir boost::shared_ptr döndürür. Paylaşılan işaretçi boşsa, döndürülen işaretçi de boş olacaktır.
+  if (sh)
+    std::cout << *sh << '\n';
+}
+
+int main()
+{
+  boost::shared_ptr<int> sh{new int{99}};
+  boost::weak_ptr<int> w{sh};
+  std::thread t1{reset, std::ref(sh)};//main() içinde iki thread oluşturur. İlk thread, paylaşılan bir işaretçiye
+  //başvuru alan reset() fonksiyonunu yürütür. İkinci thread ise, zayıf bir işaretçiye başvuru alan print() fonksiyonunu yürütür.
+  std::thread t2{print, std::ref(w)};
+  //Program başlatıldıktan sonra, hem reset() hem de print() aynı anda yürütülür. Ancak, yürütme sırası öngörülemez.
+  //  reset() fonksiyonunun nesnesi print() fonksiyonu ile erişilirken nesneyi yok etmesine neden olur.
+  /*Zayıf işaretçi bu sorunu şu şekilde çözer: lock() fonksiyonunu çağırdığında, arama sırasında varsa geçerli bir
+   nesneyi gösteren paylaşılan bir işaretçi döndürür. Değilse, paylaşılan işaretçi 0 olarak ayarlanır ve boş bir işaretleyiciye eşdeğerdir.*/
+  t1.join();//main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+  t2.join();
+
+  /*boost::weak_ptr'in kendisinin bir nesnenin ömrü üzerinde herhangi bir etkisi yoktur.print() fonksiyonu içindeki
+   nesneye güvenli bir şekilde erişmek için lock() bir boost::shared_ptr döndürür. Bu, farklı bir thread'in nesneyi
+   serbest bırakmaya çalışsa bile, döndürülen paylaşılan işaretçi sayesinde varlığını sürdüreceğini garanti eder.*/
+}
+----
+
+
+Ekran Çıktısı:
+
+ Process finished with exit code 0
+
+ 
+boost::weak_ptr  bir boost::shared_ptr ile başlatılmalıdır. En önemli fonksiyonu *lock()* fonksiyonudur. lock() fonksiyonu, zayıf işaretçiyi başlatmak için kullanılan, paylaşılan işaretçiyle sahipliği paylaşan bir boost::shared_ptr döndürür. Paylaşılan işaretçi boşsa, döndürülen işaretçi de boş olacaktır.
+
+boost::weak_ptr, bir fonksiyonun paylaşılan bir işaretçi tarafından yönetilen bir nesneyle çalışması beklendiğinde mantıklıdır, ancak nesnenin ömrü fonksiyonun kendisine bağlı değildir. Fonksiyon, nesneyi yalnızca programın başka bir yerinde en az bir paylaşılan işaretçiye sahip olduğu sürece kullanabilir. Paylaşılan işaretçinin sıfırlanması durumunda, ilgili fonksiyonun içindeki ek bir paylaşılan işaretçi nedeniyle nesne canlı tutulamaz.
+
+Örnekte, main() içinde iki thread oluşturur. İlk thread, paylaşılan bir işaretçiye başvuru alan reset() fonksiyonunu yürütür. İkinci thread ise, zayıf bir işaretçiye başvuru alan print() fonksiyonunu yürütür. Bu zayıf işaretçi önceden paylaşılan işaretçiyle başlatılmıştı.
+
+Program başlatıldıktan sonra, hem reset() hem de print() aynı anda yürütülür. Ancak, yürütme sırası öngörülemez. reset() fonksiyonunun nesnesi print() fonksiyonu ile erişilirken nesneyi yok etmesine neden olur.
+
+Zayıf işaretçi bu sorunu şu şekilde çözer: lock() fonksiyonunu çağırdığında, arama sırasında varsa geçerli bir nesneyi gösteren paylaşılan bir işaretçi döndürür. Değilse, paylaşılan işaretçi 0 olarak ayarlanır ve boş bir işaretleyiciye eşdeğerdir.
+
+boost::weak_ptr'in kendisinin bir nesnenin ömrü üzerinde herhangi bir etkisi yoktur.print() fonksiyonu içindeki nesneye güvenli bir şekilde erişmek için lock() bir boost::shared_ptr döndürür. Bu, farklı bir thread'in nesneyi serbest bırakmaya çalışsa bile, döndürülen paylaşılan işaretçi sayesinde varlığını sürdüreceğini garanti eder.
+

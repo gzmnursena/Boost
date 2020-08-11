@@ -1,0 +1,255 @@
+== Boost.Graph
+Boost.Graph , grafiklerle çalışmak için araçlar sağlar. Grafikler, noktalar arasında istediğiniz sayıda çizgi
+bulunan iki boyutlu nokta bulutlarıdır.
+
+Grafikler nokta ve çizgilerden oluşur. Bir grafik oluşturmak için, bir nokta kümesi ve aralarındaki herhangi bir
+çizgiyi tanımlamanız gerekir. Örnekte dört noktadan oluşan ve çizgi içermeyen ilk basit bir grafik içerir.
+
+Örnek-1:
+
+[source code]
+----
+#include <boost/graph/adjacency_list.hpp>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+    boost::adjacency_list<> grafik;
+    // boost::adjacency_list , örnekte varsayılan parametrelerle başlatılmış bir şablondur.
+
+    boost::adjacency_list<>::vertex_descriptor v1 = boost::add_vertex(grafik);
+    boost::adjacency_list<>::vertex_descriptor v2 = boost::add_vertex(grafik);
+    boost::adjacency_list<>::vertex_descriptor v3 = boost::add_vertex(grafik);
+    boost::adjacency_list<>::vertex_descriptor v4 = boost::add_vertex(grafik);
+
+   /* boost::add_vertex() bir grafiğe nokta ekler.
+    Grafiğe dört nokta eklemek için boost::add_vertex() fonksiyonunun dört kez çağrıldı*/
+
+    cout << v1 << ", " << v2 << ", " << v3 << ", " << v4 << endl; //Noktaları ekrana yazdırır.
+}
+----
+
+Ekran Çıktısı:
+
+ 0,1,2,3
+
+Boost.Graph, grafikleri tanımlamak için üç container sağlar. En önemli container, bu bölümdeki örneklerin neredeyse tamamında kullanılan boost::adjacency_list 'tir . Bu sınıfı kullanmak için *boost/graph/adjacency_list.hpp* dosyanın başına eklenmesi gerekir. 
+
+boost::adjacency_list , örnekte varsayılan parametrelerle başlatılmış bir şablondur. 
+
+boost::add_vertex() bir grafiğe nokta ekler. Grafiğe dört nokta eklemek için boost::add_vertex() fonksiyonunun dört kez çağrılması gerekir.
+
+boost::add_vertex(), boost::adjacency_list::vertex_descriptor türünde bir nesne döndürür. Bu nesne, grafikte yeni eklenen bir noktayı temsil eder.
+
+Örnek-2:
+
+[source,c++]
+----
+#include <boost/graph/adjacency_list.hpp>
+#include <utility>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+
+int main()
+{
+  boost::adjacency_list<> g;
+
+  boost::add_vertex(g);
+  boost::add_vertex(g);
+  boost::add_vertex(g);
+  boost::add_vertex(g);
+  //boost::add_vertex() bir grafiğe nokta ekler.
+
+  std::pair<boost::adjacency_list<>::vertex_iterator,
+    boost::adjacency_list<>::vertex_iterator> vs = boost::vertices(g);
+   /*Bir grafikten tüm noktaları almak için boost::vertices() kullanılır.
+    Bu fonksiyon, başlangıç​ ve bitiş noktalarını ifade eden boost::adjacency_list::vertex_iterator türünde iki yineleyici döndürür*/
+
+  std::copy(vs.first, vs.second,
+    std::ostream_iterator<boost::adjacency_list<>::vertex_descriptor>{
+      std::cout, "\n"});
+    // Yineleyiciler bir std::pair içinde döndürülerek ekrana noktaları yazdırır.
+}
+----
+
+Ekran Çıktısı:
+
+ 0
+ 1
+ 2
+ 3
+
+Bir grafikten tüm noktaları almak için boost::vertices() kullanılır. Bu fonksiyon, başlangıç​ve bitiş noktalarını ifade eden boost::adjacency_list::vertex_iterator türünde iki yineleyici döndürür. Yineleyiciler bir std::pair içinde döndürülür. Örnekte , tüm noktaları standart çıktıya yazmak için yineleyicileri kullanır. Bu örnek, önceki örnekte olduğu gibi 0, 1, 2 ve 3 sayısını görüntüler.
+
+Örnek-3:
+
+[source,c++]
+----
+#include <boost/graph/adjacency_list.hpp>
+#include <utility>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+    boost::adjacency_list<> grafik;
+
+    boost::adjacency_list<>::vertex_descriptor v1 = boost::add_vertex(grafik);
+    boost::adjacency_list<>::vertex_descriptor v2 = boost::add_vertex(grafik);
+    boost::add_vertex(grafik);
+    boost::add_vertex(grafik);
+    // boost::add_vertex() bir grafiğe nokta ekler.
+
+    std::pair<boost::adjacency_list<>::edge_descriptor, bool> p =
+            boost::add_edge(v1, v2, grafik); // boost::add_edge() bir std::pair döndürür
+     // İlk parametre erişim sağlar, ikincisi parametre ise satırın başarıyla eklenip eklenmediğini gösteren bir bool değişkenidir
+    cout.setf(std::ios::boolalpha); // degeri 0-1 olarak değilde true-false olarak yazdırır
+    cout << p.second << endl;
+
+
+    p = boost::add_edge(v1, v2, grafik); // Grafikteki iki noktayı bağlamak için boost::add_edge() metodu kullanılır.
+    cout << p.second << endl;
+
+    p = boost::add_edge(v2, v1, grafik);
+    cout << p.second << endl;
+
+    std::pair<boost::adjacency_list<>::edge_iterator,
+            boost::adjacency_list<>::edge_iterator> es = boost::edges(grafik);
+    /*Bir grafikten tüm noktaları almak için boost::vertices() kullanılır.
+    Bu fonksiyon, başlangıç​ ve bitiş noktalarını ifade eden boost::adjacency_list::vertex_iterator türünde iki yineleyici döndürür*/
+
+    std::copy(es.first, es.second,
+              std::ostream_iterator<boost::adjacency_list<>::edge_descriptor>{
+                      std::cout, "\n"});
+    // Yineleyiciler bir std::pair içinde döndürülerek ekrana noktaları yazdırır.
+}
+----
+
+Ekran Çıktısı:
+
+ true
+ true
+ true
+ (0,1)
+ (0,1)
+ (1,0)
+
+Grafikteki iki noktayı bağlamak için boost::add_edge() kullanılır. 
+
+boost::add_edge() bir std::pair döndürür. İlk parametre erişim sağlar, ikincisi parametre ise satırın başarıyla eklenip eklenmediğini gösteren bir bool değişkenidir. Örnekte boost::add_edge() için her çağrı p.second değerinin true olarak ayarlandığını görürsünüz. boost::add_edge() 'de her çağrıda grafiğe yeni bir satır eklenir.
+
+boost::edges() , bir grafikteki tüm satırlara erişim sağlar. boost::vertices() gibi boost::edges() , başlangıç ​​ve bitiş çizgilerini ifade eden iki yineleyici döndürür. Örnekte, tüm satırları standart çıktıya yazar. Örnekte (0,1) , (0,1) ve (1,0) .
+
+
+
+--**Algoritmalar**
+
+Noktaları içerden dışarıya ziyaret etmek için **boost::breadth_first_search()** algoritmasını kullanır. Algoritma ikinci parametre olarak geçen noktada başlar. Önce bir dalga gibi çalışarak doğrudan o noktadan ulaşılabilecek tüm noktaları ziyaret eder.
+
+Örneğin;
+
+[source code]
+----
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/breadth_first_search.hpp>
+#include <boost/graph/named_function_params.hpp>
+#include <boost/graph/visitors.hpp>
+#include <boost/array.hpp>
+#include <array>
+#include <utility>
+#include <iterator>
+#include <algorithm>
+#include <iostream>
+
+int main()
+{
+    enum { topLeft, topRight, bottomRight, bottomLeft };
+
+    std::array<std::pair<int, int>, 4> edges{{
+                                                     std::make_pair(topLeft, topRight),
+                                                     std::make_pair(topRight, bottomRight),
+                                                     std::make_pair(bottomRight, bottomLeft),
+                                                     std::make_pair(bottomLeft, topLeft)
+                                             }};
+
+    typedef boost::adjacency_list<boost::setS, boost::vecS,
+            boost::undirectedS> graph;
+    graph g{edges.begin(), edges.end(), 4};
+
+    boost::array<int, 4> distances{{0}};
+
+    boost::breadth_first_search(g, topLeft,
+                                boost::visitor(
+                                        boost::make_bfs_visitor(
+                                                boost::record_distances(distances.begin(),
+                                                                        boost::on_tree_edge{}))));
+
+    std::copy(distances.begin(), distances.end(),
+              std::ostream_iterator<int>{std::cout, "\n"});
+}
+----
+
+Örnekte mesafeleri kaydeden bir ziyaretçi kullanır. Bir mesafe, ikinci parametre olarak boost::breadth_first_search()
+için geçen noktadan başlayarak bir noktadan diğerine geçmek için geçilmesi gereken satır sayısıdır.
+Boost.Graph, ziyaretçiyi oluşturmak için yardımcı işlev boost::record_distances() işlevini sağlar.
+Bir özellik haritası ve bir etiket de iletilmelidir.
+
+Özellik haritaları, noktalar veya çizgiler için depolanacak özelliklerini saklar.
+Boost.Graph, özellik haritaları kavramını tanımlar.
+Bir işaretçi veya yineleyici bir özellik haritasının başlangıcı olarak alındığından,
+özellik haritalarını ayrıntılı olarak anlamak önemli değildir.
+Örnek boost::record_distances() , dizi boost::record_distances() başlangıcı, boost::record_distances() ı boost::record_distances() için distances.begin() ile boost::record_distances() . Bu, özellik haritası olarak kullanılacak dizi mesafeleri için yeterlidir. Ancak, dizinin boyutunun grafikteki nokta sayısından daha küçük olmaması önemlidir. Sonuçta, grafikteki her bir noktaya olan mesafenin kaydedilmesi gerekir.
+
+
+**NOT: **
+Mesafelerin std::array değil boost::array dayandığını unutma!!!. std::array kullanmak derleyici hatasına yol açar.
+
+
+
+--**Containers**
+
+Şimdiye kadar bu bölümdeki tüm örnekler, grafikleri tanımlamak için boost::adjacency_list kullandı.
+Bu bölümde, Boost.Graph: boost::adjacency_matrix ve boost::compressed_sparse_row_graph tarafından sağlanan diğer
+iki grafik containers'ı tanıtılmaktadır.
+
+Örneğin;
+[source,c++]
+----
+#include <boost/graph/compressed_sparse_row_graph.hpp>
+#include <array>
+#include <utility>
+
+int main()
+{
+    enum { topLeft, topRight, bottomRight, bottomLeft };
+
+    std::array<std::pair<int, int>, 4> edges{{
+        std::make_pair(topLeft, topRight),
+        std::make_pair(topRight, bottomRight),
+        std::make_pair(bottomRight, bottomLeft),
+        std::make_pair(bottomLeft, topLeft)
+    }};
+
+    typedef boost::compressed_sparse_row_graph<boost::bidirectionalS> graph;
+    graph g{boost::edges_are_unsorted_multi_pass, edges.begin(),
+            edges.end(), 4};
+}
+----
+
+Ekran Çıktısı:
+
+ Process finished with exit code 0
+ 
+ 
+Boost::adjacency_matrix boost::adjacency_list gibi kullanılır. Ancak, seçicileri geçen iki şablon parametresi boost::adjacency_matrix ile mevcut değildir. Boost::adjacency_matrix ile boost::vecS ve boost::setS gibi seçiciler kullanılmaz. Boost::adjacency_matrix grafiği bir matriste depolar ve iç yapı sabit olarak kodlanır. Matrisi iki boyutlu bir tablo olarak düşünebilirsiniz: tablo, grafiğin noktaları kadar satır ve sütuna sahip bir karedir. Bir çizgi, çizginin iki uç noktasına karşılık gelen satır ve sütunun kesiştiği hücreyi işaretleyerek oluşturulur.
+ 
+
+
+
+

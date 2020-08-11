@@ -1,0 +1,64 @@
+== Boost.Assign
+
+Boost.Assign kütüphanesi, containers'i başlatmak veya containers öğe eklemek için yardımcı fonksiyonlar sağlar. Bu fonksiyonlar, bir container'da birçok öğenin depolanması gerektiğinde özellikle yararlıdır. Boost.Assign tarafından sunulan fonksiyonlar sayesinde, öğeleri container'a birer birer eklemek için push_back() gibi bir  fonksiyon tekrar tekrar çağırmanız gerekmez.
+
+C + + 11'i destekleyen bir geliştirme ortamıyla çalışıyorsanız, başlatıcı listelerinden yararlanabilirsiniz. Kapsayıcıları başlatmak için genellikle yapıcıya istediğiniz sayıda değer iletebilirsiniz. Başlatıcı listeleri sayesinde Boost'a bağlı olmanız gerekmez. C + + 11 ile atayın. Ancak, Boost.Assign varolan bir container'a birden çok değer eklemek için yardımcı işlevler sağlar. Bu yardımcı işlevler C + + 11 geliştirme ortamlarında yararlı olabilir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/assign.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <vector>
+#include <stack>
+#include <map>
+#include <string>
+#include <utility>
+
+using namespace boost::assign;
+
+int main()
+{
+    std::vector<int> v = list_of(1)(2)(3);
+
+    std::stack<int> s = list_of(1)(2)(3).to_adapter();//std::stack gibi bağdaştırıcıları başlatır
+
+    std::vector<std::pair<std::string, int>> v2 =
+            list_of<std::pair<std::string, int>>("a", 1)("b", 2)("c", 3);
+
+    std::map<std::string, int> m =
+            map_list_of("a", 1)("b", 2)("c", 3);
+
+    std::vector<boost::tuple<std::string, int, double>> v3 =
+            tuple_list_of("a", 1, 9.9)("b", 2, 8.8)("c", 3, 7.7);
+
+    std::vector<int> v4;
+    boost::assign::push_back(v4)(1)(2)(3);
+
+    std::deque<int> d;
+    boost::assign::push_front(d)(1)(2)(3);
+
+    std::set<int> s2;
+    boost::assign::insert(s2)(1)(2)(3);
+
+    std::queue<int> q;
+    boost::assign::push(q)(1)(2)(3);
+}
+----
+
+
+Ekran Çıktısı:
+
+ Process finished with exit code 0
+
+Boost.Assign containers başlatmak için üç fonksiyon sağlar. En önemlisi ve genellikle birlikte çalıştığınız boost::assign::list_of(). Boost::assign::map_list_of() std::map ve Boost::assign::tuple_list_of() bir containers'taki dizilerini başlatmak için kullanılır.
+
+
+Boost::assign::map_list_of() veya boost::assign::tuple_list_of () kullanmak zorunda değilsiniz. Boost::assign::list_of () ile herhangi bir kapsayıcıyı başlatabilirsiniz. Ancak, Std::map veya tuples içeren bir kapsayıcı kullanırsanız, Boost::assign::list_of() fonksiyonunu öğelerin containers'da nasıl depolandığını bildiren bir şablon parametresi geçirmeniz gerekir. Bu şablon parametresi boost::assign::map_list_of() ve boost::assign::tuple_list_of () için gerekli değildir.
+
+Üç işlev de bir proxy nesnesi döndürür. Bu nesne operatör operator() aşırı yükler. Kapsayıcıdaki değerleri kaydetmek için bu fonksiyonu birden çok kez çağırabilirsiniz. Container ve başka bir nesneye erişim olsa bile, container bu proxy nesnesi ile değiştirilir.
+
+Std::stack gibi bağdaştırıcıları başlatmak istiyorsanız, proxy'de  to_adapter() fonksiyonunu çağırın. Proxy daha sonra tüm bağdaştırıcılar tarafından sağlanan push() fonksiyonunu çağırır.
+
+boost::assign::tuple_list_of() yalnızca Boost::tuple türünde dizileri destekler. Standart kitaplıktan dizilerini içeren kapsayıcılar başlatmak için bu fonksiyonu kullanamazsınız.

@@ -1,0 +1,106 @@
+== Boost.Phoenix
+
+Phoenix, fonksiyonel programlama için en önemli Boost kütüphanesidir. Boost.Bind veya Boost.Lambda gibi kütüphaneler işlevsel programlama için bazı destek sağlarken, Boost.Phoenix bu kütüphanelerin özelliklerini içerir ve bunların ötesine geçer.
+
+Fonksiyonel programlamada fonksiyonlar nesnedir ve nesneler gibi işlenebilir. Boost.Phoenix ile bir işlevin sonuç olarak başka bir işlevi döndürmesi mümkündür. Bir işlevi parametre olarak başka bir işleve geçirmek de mümkündür. İşlevler nesne olduğundan, örnekleme ve yürütme arasında ayrım yapmak mümkündür. Bir işleve erişmek, onu çalıştırmakla aynı şey değildir.
+
+Boost.Phoenix işlev nesneleri ile işlevsel programlamayı destekler: Fonksiyonlar, fonksiyon operatörünü() aşırı yükleyen sınıflara dayalı nesnelerdir. Bu şekilde işlev nesneleri C + + 'da diğer nesneler gibi davranır. Örneğin, bir containers'ta kopyalanabilir ve saklanabilirler. Ancak aynı zamanda fonksiyonlar gibi davranırlar çünkü çağrılabilirler.
+
+Fonksiyonel programlama C + + 'da yeni değildir. Boost.Phoenix kullanmadan bir işlevi başka bir işleve parametre olarak iletebilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/phoenix/phoenix.hpp>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+using namespace std;
+
+bool is_odd(int i) { return i % 2 == 1; }
+
+int main()
+{
+    vector<int> vektor{1, 2, 3, 4, 5};
+
+    cout << std::count_if(vektor.begin(), vektor.end(), is_odd) << endl;// vektordeki tek sayıların sayısını verir
+
+    auto lambda = [](int i){ return i % 2 == 1; }; //auto tipinde bir dizi tanımlar ve tek sayıları diziye atar
+    cout << std::count_if(vektor.begin(), vektor.end(), lambda) << endl;//lambda dizisindeki tek sayıların sayısını verir
+
+    using namespace boost::phoenix::placeholders;
+    auto phoenix = arg1 % 2 == 1;
+
+    /*arg1, bir işlev nesnesinin global bir örneğidir. Std :: cout gibi kullanabilirsiniz:
+    Bu nesneler, ilgili başlık dosyası eklendikten sonra bulunur.
+     arg1, tekli bir fonksyonu tanımlamak için kullanılır. arg1 % 2==1 ifadesi, bir parametre bekleyen yeni bir işlev oluşturur.
+    İşlev hemen yerine getirilmez, ancak phoenix'te depolanır.*/
+
+    cout << std::count_if(vektor.begin(), vektor.end(), phoenix) << endl;//phoenix 'teki tek sayıların sayısını verir
+
+    cout<<"--------------"<< endl;
+
+    using namespace boost::phoenix::placeholders;
+    auto phoenix2 = arg1 > 2 && arg1 % 2 == 1;//ikiden buyuk tek sayilari atar
+    cout << std::count_if(vektor.begin(), vektor.end(), phoenix2) << endl;//ikiden buyuk tek sayilarin sayisini verir
+
+    cout<<"--------------"<< endl;
+
+    cout << std::count_if(vektor.begin(), vektor.end(), bind(is_odd, arg1)) << endl; //Bağımsız işlevin adı ilk parametre olarak iletilir. Diğer tüm parametreler bağımsız işleve iletilir.
+
+}
+----
+
+Ekran Çıktısı:
+
+ 3
+ 3
+ 3
+ --------------
+ 2
+ --------------
+ 3
+ 
+arg1, Phoenix işlevi çağrıldığında geçirilen değer için bir yer tutucudur. Burada sadece arg1 kullanıldığından, tekli bir işlev oluşturulur. Boost.Phoenix, boost::phoenix::placeholders::arg2 ve boost::phoenix::placeholders::arg3 gibi ek yer tutucular sağlar. Bir Phoenix işlevi her zaman en büyük sayıya sahip yer tutucu kadar parametre bekler.
+
+Yukarıdaki örneği kendi fonksiyonumuzla oluşturmaya çalışalım.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/phoenix/phoenix.hpp>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+using  namespace std;
+
+struct is_odd_impl
+{
+    typedef bool result_type;
+
+    template <typename T>
+    bool operator()(T t) const { return t % 2 == 1; }
+    //operator() aşırı yüklenir:
+    //tek bir sayı iletildiğinde, operator true değerini döndürür. Aksi takdirde, operator false değerini döndürür.
+};
+
+boost::phoenix::function<is_odd_impl> is_odd;
+
+int main()
+{
+  std::vector<int> vektor{1, 2, 3, 4, 5};
+
+  using namespace boost::phoenix::placeholders;
+  cout << std::count_if(vektor.begin(), vektor.end(), is_odd(arg1)) << endl; // tek sayilarin sayisini verir.
+}
+----
+
+Ekran Çıktısı:
+
+ 3
+ 
+ 

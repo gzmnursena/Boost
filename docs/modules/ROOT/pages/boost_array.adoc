@@ -1,0 +1,51 @@
+== Boost.Array
+
+Boost.Array kütüphanesi, boost / array.hpp içindeki boost::array sınıf şablonunu tanımlar. boost::array, standart kütüphaneye C++ 11 ile eklenen std::array'e benzer. Bir C++ 11 geliştirme ortamıyla çalışıyorsanız boost::dizisini yok sayabilirsiniz.
+
+Boost::array , bir C ++ dizisiyle aynı özellikleri gösteren bir dizi oluşturulabilir.
+Ek olarak, boost::array , C ++ containerslarının gerekliliklerine de uygundur, bu da böyle bir diziyi
+diğer containers taşımak kadar kolay hale getirir. Prensip olarak boost::array std::vector olarak
+düşünülebilir, ancak boost::array eleman sayısı sabittir.
+
+Örneğin;
+
+[source code]
+----
+#include <boost/array.hpp>
+#include <string>
+#include <algorithm>
+#include <iostream>
+
+using namespace std;
+
+
+// Boost dizisi olusturulup icerisine elemanlar atandı. boost::array'i vector gibi kullandik
+
+int main()
+{
+    typedef boost::array<string, 3> array; //boost kütüphanesinden string 3 elemanlı dizi tanımlandı
+    array dizi;
+
+    dizi[0] = "cat";
+    dizi.at(1) = "shark";
+    *dizi.rbegin() = "spider"; // diziye elemanlar atar.
+
+    sort(dizi.begin(), dizi.end());//dizinin başlangıç ve son elemanını alarak küçükten büyüğe sıralar.
+
+    for (const string &item : dizi) //sıralanan dizi foreach döngüsü ile ekrana yazıdırılır
+        cout << item << endl;
+
+    cout << dizi.size() << endl;//dizinin boyutunu yazdırır
+    cout << dizi.max_size() << endl;//dizinin max indeksini yazdırır.
+}
+----
+
+Ekran Çıktısı:
+
+ cat
+ shark
+ spider
+ 3
+ 3
+ 
+Örnektede görüldüğü gibi görüldüğü gibi, boost dizisini kullanmak oldukça basittir ve çağrılan üye işlevler std::vector'daki benzerleriyle aynı anlama sahip olduklarından ek bir açıklamaya ihtiyaç duymazlar.

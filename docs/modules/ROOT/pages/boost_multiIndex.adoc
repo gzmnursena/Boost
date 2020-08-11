@@ -1,0 +1,332 @@
+== Boost.MultiIndex
+
+Boost.MultiIndex , isteğe bağlı sayıda arabirimi destekleyen containers tanımlamayı mümkün kılar.
+std::vector , bir dizine sahip öğelere doğrudan erişimi destekleyen bir arabirim sağlarken,
+std::set öğeleri sıralayan bir arabirim sağlarken,
+Boost.MultiIndex, her iki arabirimi de destekleyen containerları tanımlamanıza olanak tanır.
+Bu tür bir container, bir indeks kullanarak elemanlara erişmek ve sıralı bir şekilde kullanılabilir.
+
+Öğelere farklı şekillerde erişilmesi gerekiyorsa ve normalde birden fazla containerda saklanması
+gerekirse Boost.MultiIndex kullanılabilir.
+Öğeleri hem bir vektörde hem de kümede saklamak ve ardından containerları sürekli olarak senkronize
+etmek yerine, bir vektör arayüzü ve bir ayar arayüzü sağlayan Boost.MultiIndex ile bir container
+tanımlayabilirsiniz.
+
+Boost.MultiIndex ayrıca, birden çok farklı özelliğe dayalı öğelere erişmeniz gerektiğinde kullanılır.
+
+
+Örnekte , hayvanlar adlarına ve bacak sayısına göre aranır. Boost.MultiIndex olmadan,
+iki karma containers gerekli olacaktır - biri hayvanları adlarına ve diğeri onları bacak sayısına
+göre aramak için.
+
+Örneğin; boost::multi_index::multi_index_container
+
+[source code]
+----
+
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::multi_index;
+using  namespace std;
+
+struct animal
+{
+    string name;
+    int legs;
+};
+
+typedef multi_index_container<
+        animal,
+        indexed_by<
+                hashed_non_unique<
+                        member<
+                                animal, string, &animal::name
+                        >
+                >,
+                hashed_non_unique<
+                        member<
+                                animal, int, &animal::legs
+                        >
+                >
+        >
+> animal_multi;
+
+int main()
+{
+    animal_multi animals;
+
+    animals.insert({"cat", 4});
+    animals.insert({"shark", 0});
+    animals.insert({"spider", 8});
+
+    cout << animals.count("cat") << endl;
+
+    const animal_multi::nth_index<1>::type &legs_index = animals.get<1>();
+    cout << legs_index.count(8) << endl;
+}
+
+----
+
+Ekran Çıktısı:
+ 
+
+Boost / multi_index_container.hpp içinde tanımlanan boost :: multi_index :: multi_index_container sınıfı, her container tanımı için kullanılır. Bu, en az iki parametre gerektiren bir sınıf şablonudur. İlk parametre, containerın depolaması gereken öğelerin türüdür. Örnekte hayvan adı verilen kullanıcı tanımlı bir sınıftır. İkinci parametre, containerın sağlaması gereken farklı dizinleri belirtmek için kullanılır.
+
+
+Boost.MultiIndex tabanlı kapların temel avantajı, öğelere farklı arabirimler üzerinden erişebilmenizdir. Yeni bir container tanımladığınızda, arabirimlerin sayısını ve türünü belirleyebilirsiniz. Örnekte containerın, hayvanların adlarına veya bacak sayısına göre aranmasını desteklemesi gerekir, bu nedenle iki arayüz tanımlanır. Boost.MultiIndex bu arabirimler dizinlerini çağırır - burası kütüphanenin adının geldiği yerdir
+
+
+Arayüzler boost::multi_index::indexed_by sınıfının yardımıyla tanımlanır. Her arabirim bir şablon parametresi olarak geçirilir. Boost/multi_index/hashed_index.hpp türünde tanımlanan boost::multi_index::hashed_non_unique türünde iki arabirim kullanılır. Bu arabirimleri kullanmak, kabın std::unordered_set gibi davranmasını sağlar ve bir hash değeri kullanarak değerleri arar.
+
+MultiIndex kapsayıcısına erişmek için bir arabirim seçmeniz gerekir. Nesne hayvanlarına insert () veya count () kullanarak doğrudan erişirseniz, ilk arabirim kullanılır. Örnekte, üye değişken adı için karma kapsayıcıdır. Farklı bir arayüze ihtiyacınız varsa, bunu açıkça seçmelisiniz.
+
+Bir MultiIndex kapsayıcısından öğeleri kaldırmak ve yenilerini eklemek zorunda kalmamak için Boost.MultiIndex değerleri doğrudan değiştirmek için üye işlevleri sağlar. Bu üye işlevleri MultiIndex kapsayıcısının kendisinde çalıştığından ve containerdaki hiçbir öğe doğrudan değiştirilmediğinden, tüm arabirimler bildirilir ve yeni karma değerleri hesaplanabilir.
+
+Örneğin; MultiIndex kapsayıcısındaki öğeleri değiştirme
+modify()
+
+[source, c++]
+----
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::multi_index;
+using namespace std;
+
+struct animal
+{
+    std::string name;
+    int legs;
+};
+
+typedef multi_index_container<
+        animal,
+        indexed_by<
+                hashed_non_unique<
+                        member<
+                                animal, std::string, &animal::name
+                        >
+                >,
+                hashed_non_unique<
+                        member<
+                                animal, int, &animal::legs
+                        >
+                >
+        >
+> animal_multi;
+
+int main()
+{
+    animal_multi animals;
+
+    animals.insert({"cat", 4});
+    animals.insert({"shark", 0});
+    animals.insert({"spider", 8});
+
+    auto &legs_index = animals.get<1>();
+    auto it = legs_index.find(4);
+    legs_index.modify(it, [](animal &a){ a.name = "dog"; });
+
+    cout << animals.count("dog") << '\n';
+}
+----
+
+Boost.MultiIndex tarafından sunulan her arabirim, doğrudan container üzerinde çalışan üye işlevi change () işlevini sağlar. Değiştirilecek nesne, değiştirilecek ilk parametre olarak () geçirilen bir yineleyici ile tanımlanır. İkinci parametre, tek parametresi olarak containerda saklanan türde bir nesne bekleyen bir işlev veya işlev nesnesidir. İşlev veya işlev nesnesi, öğeyi istediği kadar değiştirebilir. Örnekte, bir elemanın değiştirilmesi için change () işlevinin nasıl kullanılacağını gösterir.
+
+
+Hiçbir değerin iki kez depolanmamasını sağlamak için *boost::multi_index::hashed_unique* kullanılır. Belirli bir container tüm arabirimlerinin gereksinimlerini karşılamıyorsa değerlerin saklanamayacağını lütfen unutmayın. Bir arabirim, değerleri birden çok kez depolamanıza izin vermiyorsa, başka bir arabirimin buna izin verip vermemesinin bir önemi yoktur.
+
+Örneğin; boost::multi_index::hashed_unique
+
+[source,c++]
+----
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::multi_index;
+using namespace std;
+
+struct animal
+{
+  std::string name;
+  int legs;
+};
+
+typedef multi_index_container<
+  animal,
+  indexed_by<
+    hashed_non_unique<
+      member<
+        animal, std::string, &animal::name
+      >
+    >,
+    hashed_unique<
+      member<
+        animal, int, &animal::legs
+      >
+    >
+  >
+> animal_multi;
+
+int main()
+{
+  animal_multi animals;
+
+  animals.insert({"cat", 4});
+  animals.insert({"shark", 0});
+  animals.insert({"dog", 4});
+
+  auto &legs_index = animals.get<1>();
+  cout << legs_index.count(4) << endl;
+}
+----
+
+Ekran Çıktısı: 1
+
+Örnekte, ikinci arabirim olarak boost::multi_index::hashed_unique kullanır. Bu, aynı sayıda bacağı olan iki hayvanın containerda saklanamayacağı anlamına gelir çünkü hash değerleri aynı olacaktır.
+
+Örnek, halihazırda saklanan kedi ile aynı sayıda bacağı olan bir köpeği saklamaya çalışır. Bu, ikinci arabirim için benzersiz karma değerlere sahip olma gereksinimini ihlal ettiğinden, köpek kapta saklanmaz. Bu nedenle, dört bacağı olan hayvanları ararken, programda 1 görüntülenir, çünkü sadece kedi saklanır ve sayılır.
+
+Örneğin; ordered_non_unique and random_access
+
+[source,c++]
+----
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::multi_index;
+using namespace std;
+
+struct animal
+{
+  std::string name;
+  int legs;
+};
+
+typedef multi_index_container<
+  animal,
+  indexed_by<
+    sequenced<>,
+    ordered_non_unique<
+      member<
+        animal, int, &animal::legs
+      >
+    >,
+    random_access<>
+  >
+> animal_multi;
+
+int main()
+{
+  animal_multi animals;
+
+  animals.push_back({"cat", 4});
+  animals.push_back({"shark", 0});
+  animals.push_back({"spider", 8});
+
+  auto &legs_index = animals.get<1>();
+  auto it = legs_index.lower_bound(4);
+  auto end = legs_index.upper_bound(8);
+  for (; it != end; ++it)
+    std::cout << it->name << endl;
+
+  const auto &rand_index = animals.get<2>();
+  cout << rand_index[0].name << endl;
+}
+----
+
+Ekran Çıktısı:
+
+ cat
+ spider
+ cat
+ 
+Boost::multi_index::ordered_non_unique arabirimi ile nesneler otomatik olarak sıralanır. Bu arabirim, kapsayıcıyı tanımlarken bir sıralama ölçütü belirtmenizi gerektirir. Örnekte, hayvan türü nesneleri, boost::multi_index::member yardımcı sınıfını kullanarak bacak sayısına göre sıralar.
+
+Örneğin; 
+
+[source,c++]
+----
+#include <string>
+#include <vector>
+#include <iostream>
+
+using  namespace std;
+
+struct animal
+{
+    string name;
+    int legs;
+    bool has_tail;
+};
+
+class animals_container
+{
+public:
+    void add(animal a)
+    {
+        // TODO: Implement this member function.
+    }
+
+    const animal *find_by_name(const std::string &name) const
+    {
+        // TODO: Implement this member function.
+        return nullptr;
+    }
+
+    vector<animal> find_by_legs(int from, int to) const
+    {
+        // TODO: Implement this member function.
+        return {};
+    }
+
+    vector<animal> find_by_tail(bool has_tail) const
+    {
+        // TODO: Implement this member function.
+        return {};
+    }
+};
+
+int main()
+{
+    animals_container animals;
+    animals.add({ "cat", 4, true });
+    animals.add({ "ant", 6, false });
+    animals.add({ "spider", 8, false });
+    animals.add({ "shark", 0, false });
+
+    const animal *a = animals.find_by_name("cat");
+    if (a)
+        cout << "cat has " << a->legs << " legs"<< endl;
+
+    auto animals_with_6_to_8_legs = animals.find_by_legs(6, 9);
+    for (auto a : animals_with_6_to_8_legs)
+        cout << a.name << " has " << a.legs << " legs"<< endl;
+
+    auto animals_without_tail = animals.find_by_tail(false);
+    for (auto a : animals_without_tail)
+        cout << a.name << " has no tail"<< endl;
+}
+----
+
+
+
+
+
+
+

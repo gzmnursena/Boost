@@ -1,0 +1,78 @@
+== Boost.MPI
+
+Boost.MPI, MPI standardına (İleti Geçiş Arabirimi) bir arabirim sağlar. Bu standart, görevleri aynı anda yürüten programların geliştirilmesini basitleştirir. Bu tür programları thread'leri kullanarak veya birden çok işlemin paylaşılan bellek veya ağ bağlantıları aracılığıyla birbirleriyle iletişim kurarak geliştirebilirsiniz. MPI'nın avantajı, bu tür ayrıntılara dikkat etmenize gerek olmamasıdır. Programınızı paralel hale getirmeye tamamen konsantre olabilirsiniz.
+
+Bir dezavantaj, bir MPI çalışma zamanı ortamına ihtiyacınız olmasıdır. MPI yalnızca çalışma zamanı ortamını kontrol ediyorsanız bir seçenektir. Örneğin, çift tıklamayla başlatılabilen bir programı dağıtmak istiyorsanız, MPI kullanamazsınız. İşletim sistemleri thread'leri, paylaşılan belleği ve ağları kutudan çıkarırken desteklerken, genellikle bir MPI çalışma zamanı ortamı sağlamaz. Kullanıcıların bir MPI programını başlatmak için ek adımlar gerçekleştirmesi gerekir.
+
+MPI, paralel hesaplama fonksiyonlarını tanımlar. Paralel hesaplama, görevlerin paralel yürütülmesini destekleyen çalışma zamanı ortamlarında görevleri eşzamanlı olarak çalıştırabilen programları ifade eder. Bu tür çalışma zamanı ortamları genellikle birden çok işlemciyi temel alır. Tek bir işlemci yalnızca sıralı olarak kod yürütebildiğinden, birden çok işlemciyi bağlamak görevleri paralel olarak yürütebilecek bir çalışma zamanı ortamı oluşturur. Binlerce işlemci bağlıysa, sonuç paralel bir bilgisayardır - genellikle yalnızca süper bilgisayarlarda bulunan bir mimari türü. MPI, süper bilgisayarları daha kolay programlama yöntemleri bulmak için aramadan gelir.
+
+MPI kullanmak istiyorsanız, standardın bir uygulamasına ihtiyacınız vardır. MPI birçok işlevi tanımlasa da, genellikle kutudan çıkan işletim sistemleri tarafından desteklenmez. Örneğin, Windows'un masaüstü sürümleri MPI desteği ile birlikte gönderilmez.
+
+En önemli MPI uygulamaları MPICH ve Open MPI'dır. MPICH en eski MPI uygulamalarından biridir. 1990'ların ortalarından beri var. MPICH, aktif olarak sürdürülen ve güncellenen olgun ve taşınabilir bir uygulamadır. Open MPI'nin ilk sürümü 2005 yılında piyasaya sürüldü. Open MPI, daha önceki MPI uygulamalarından sorumlu olan birçok geliştiriciyi içeren işbirliğine dayalı bir çaba olduğundan, Open MPI gelecekteki standart olarak görülüyor. Ancak bu, MPICH'nin göz ardı edilebileceği anlamına gelmez. MPICH'ye dayanan birkaç MPI uygulaması vardır. Örneğin, Microsoft, MPICH tabanlı Microsoft HPC Paketi adlı bir MPI uygulaması gönderir.
+
+MPICH, Windows, Linux ve OS X gibi çeşitli işletim sistemleri için kurulum dosyaları sağlar. Bir MPI uygulamasına ihtiyacınız varsa ve bunu kaynak kodundan oluşturmak istemiyorsanız, MPICH kurulum dosyaları MPI kullanmaya başlamak için en hızlı yoldur.
+
+MPICH kurulum dosyaları, MPI programlarını geliştirmek için gerekli başlık dosyalarını ve kitaplıkları içerir. Ayrıca, bir MPI çalışma zamanı ortamı içerir. MPI programları görevleri aynı anda birkaç işlemcide yürüttüğünden, birkaç işlemde çalışırlar. Bir MPI programı yalnızca bir kez değil, birden çok kez başlatılır. Aynı MPI programının birkaç örneği birden çok işlemcide çalışır ve MPI standardı tarafından tanımlanan işlevler aracılığıyla iletişim kurar.
+
+Çift tıklama ile bir MPI programı başlatamazsınız. Genellikle mpiexec adı verilen bir yardımcı program kullanırsınız. MPI programınızı, MPI çalışma zamanı ortamında programınızı başlatan mpiexec'e geçirirsiniz. Komut satırı seçenekleri kaç işlemin başlatılacağını ve nasıl iletişim kurulduğunu belirler (örneğin, soketler veya paylaşılan bellek aracılığıyla). MPI çalışma zamanı ortamı bu ayrıntılarla ilgilendiği için paralel programlamaya odaklanabilirsiniz.
+
+Yükleme dosyalarını MPICH'den kullanmaya karar verdiyseniz, MPICH'nin yalnızca 64 bit sürüm sağladığını unutmayın. MPICH ile MPI programları geliştirmek ve Boost.MPI'nin 64 bit sürümünü oluşturmak için 64 bit derleyici kullanmanız gerekir.
+
+
+Boost.MPI, MPI standardına yönelik bir C ++ arabirimidir. Kitaplık boost::mpi  alanını kullanır. Tüm sınıflara ve fonksiyonlara erişmek için boost/mpi.hpp başlık dosyasını dahil etmek yeterlidir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/mpi.hpp>
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+    boost::mpi::environment env{argc, argv}; //boost::mpi::environment  MPI'yı başlatır
+    //Yapıcı, MPI standardından MPI_Init() fonksiyonunu çağırır. Yıkıcı  MPI_Finalize() fonksiyonunu çağırır.
+    boost::mpi::communicator world;//boost::mpi::communicator  bir iletişim cihazı oluşturmak için kullanılır.
+    std::cout << world.rank() << ", " << world.size() << '\n';
+
+
+    boost::mpi::environment env2{argc, argv};
+    boost::mpi::communicator world2;
+    if (world2.rank() == 0)
+    {
+        int i;
+        world2.recv(1, 16, i);
+        std::cout << i << '\n';
+    }
+    else if (world2.rank() == 1)
+    {
+        world2.send(0, 16, 99);
+    }
+}
+----
+
+
+Ekran Çıktısı:
+
+
+
+ 
+Örnekte basit bir MPI programıdır. Aşağıdaki tüm örneklerde bulacağınız iki sınıf kullanır.  boost::mpi::environment  MPI'yı başlatır. Yapıcı, MPI standardından MPI_Init() fonksiyonunu çağırır. Yıkıcı  MPI_Finalize() fonksiyonunu çağırır. boost::mpi::communicator  bir iletişim cihazı oluşturmak için kullanılır. Communicator, MPI'nin temel kavramlarından biridir ve süreçler arasında veri alışverişini destekler.
+
+
+
+boost::mpi::communicator iki işlem arasında veri alışverişi için send() ve recv() olmak üzere iki basit fonksiyon sağlar. Yalnızca veri gönderildiğinde veya alındığında dönen engelleme işlevleridir. Bu özellikle recv() için önemlidir. Veri gönderen başka bir işlem olmadan recv() çağrılırsa, çağrı blokları ve işlem çağrıda durur.
+
+Örnekte, sıra 0 ile işlem recv() ile veri alır. Rütbe 1 ile işlem, send() ile veri gönderir. Programı ikiden fazla işlemle başlatırsanız, diğer işlemler hiçbir şey yapmadan çıkar.
+
+Send() işlevini göndermek için üç parametre iletirsiniz: İlk parametre, verilerin gönderileceği işlemin sırasıdır. İkinci parametre, verileri tanımlayan bir etikettir. Üçüncü parametre veridir.
+
+Etiketi her zaman bir tamsayıdır. Örnekte etiket 16'dır. Etiket, gönderilecek bir send() tanımlamayı mümkün kılar. Etiketin recv() ile kullanıldığını göreceksiniz.
+
+send() işlevine iletilen üçüncü parametre 99'dur. Bu sayı, 1. sıradaki işlemden 0. sıradaki işleme gönderilir. Boost.MPI tüm ilkel türleri destekler. 99 gibi bir int değeri doğrudan gönderilebilir.
+
+recv() benzer parametreler bekler. İlk parametre, verilerin alınması gereken sürecin sırasıdır. İkinci parametre recv() çağrısını send() çağrısıyla bağlayan etikettir. Üçüncü parametre, alınan verilerin saklanacağı değişkendir.
+
+
+
+

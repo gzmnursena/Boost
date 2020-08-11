@@ -1,0 +1,57 @@
+== Boost.Lambda
+
+C + + 11'den önce, lambda işlevlerinden yararlanmak için Boost.Lambda gibi bir kitaplık kullanmanız gerekiyordu. C + + 11'den beri, lambda işlevleri artık programlama dilinin bir parçası olduğu için bu kitaplık kullanımdan kaldırılmış olarak kabul edilebilir. C + + 11'i desteklemeyen bir geliştirme ortamında çalışıyorsanız, Boost.Lambda'ya dönmeden önce Boost.Phoenix'i düşünmelisiniz. Boost.Phoenix daha yeni bir kütüphane ve C + + 11 olmadan lambda işlevlerini kullanmanız gerekiyorsa muhtemelen daha iyi bir seçimdir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/if.hpp>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+int main()
+{
+    std::vector<int> vektor{1, 3, 2};
+    std::for_each(vektor.begin(), vektor.end(),
+                  std::cout << boost::lambda::_1 << "\n");
+
+    //Boost :: lambda :: _ 1, bir parametre bekleyen bir lambda işlevi oluşturan bir yer tutucudur.
+    //Yer tutucudaki sayı beklenen parametrelerin sayısını belirler, bu nedenle  boost :: lambda :: _ 1 bir parametre bekler.
+
+    std::cout<<"---------------\n";
+
+    std::for_each(vektor.begin(), vektor.end(),
+                  boost::lambda::if_then(boost::lambda::_1 > 1,
+                                         std::cout << boost::lambda::_1 << "\n"));
+    //vektorun 1'den buyuk olan elemanlarını verir.
+
+}
+
+
+
+
+
+----
+
+Ekran Çıktısı:
+
+ 1
+ 3
+ 2
+ ---------------
+ 3
+ 2
+
+
+boost::lambda::_ 1, bir parametre bekleyen bir lambda işlevi oluşturan bir yer tutucudur.
+Yer tutucudaki sayı beklenen parametrelerin sayısını belirler, bu nedenle boost::lambda::_ 2 iki parametre bekler ve boost::lambda::_ 3 üç parametre bekler. Lamda sadece bu üç yer tutucuyu sağlar. Yukarıdaki örnekte lambda işlevi boost::lambda::_ 1 kullanır çünkü std::for_each() tekli bir parametre bekler.
+
+
+Dosyanın başındaki boost/lambda/if.hpp, lambda işlevindeki if yapılarını oluşturmak için kullanabileceğiniz yapıları tanımlar. En basit yapı, iki parametre bekleyen boost::lambda::if_then() fonksiyon şablonudur: ilk parametre bir koşuldur. Koşul doğruysa, ikinci parametre yürütülür. Her iki parametre de yukarıdaki örnekteki gibi lambda fonksiyonları olabilir.
+
+boost::lambda::if_then() işlevine ek olarak, Boost.Lambda, her ikisi de üç parametre bekleyen boost::lambda::if_then_else() ve boost::lambda::if_then_else_return() işlev şablonlarını sağlar. Döngüler ve döküm operatörleri ve lambda işlevlerinde istisnalar atmak için işlev şablonları da sağlanır. Boost.Lambda tarafından tanımlanan birçok işlev şablonu, normal C + + işlevlerinden hiçbir şekilde daha düşük olmayan lambda işlevlerini tanımlamayı mümkün kılar.
+
+

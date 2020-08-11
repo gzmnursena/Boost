@@ -1,0 +1,189 @@
+== Boost.Regex  
+
+
+Boost.Regex, C ++ 'da düzenli ifadeler kullanmanıza izin
+verir. Kütüphane, C ++ 11'den beri standart kütüphanenin
+bir parçası olduğundan, geliştirme ortamınız C ++ 11'i
+destekliyorsa Boost.Regex'e bağımlı değilsiniz. Başlık
+dosyası normal ifadesini eklerseniz, ad alanı std'de aynı
+adlı sınıfları ve işlevleri kullanabilirsiniz.
+
+Boost.Regex içindeki en önemli iki sınıf, boost /
+regex.hpp dosyasında tanımlanan boost::regex ve boost::smatch'dir. Birincisi düzenli bir ifadeyi tanımlar ve ikincisi arama sonuçlarını kaydeder.
+
+Boost.Regex, normal ifadeleri aramak için üç farklı işlev sunar.
+
+
+Örneğin; boost::regex_match()
+
+[source,c++]
+----
+#include <boost/regex.hpp>
+#include <string>
+#include <iostream>
+
+using  namespace std;
+
+int main()
+{
+    string metin = "Boost Libraries";
+    boost::regex expr{"\\w+\\metin\\w+"};
+    cout << std::boolalpha << boost::regex_match(metin, expr) << endl;//sonucu std::boolalpha ile true/false düödürür.
+    //regex expr: normal bir ifadeyi tanımlar
+    //boost::regex_match: arama sonuçlarını kaydeder.metnin içerisinde "metin" var mı diye bakar.
+}
+----
+
+Bu kodu çalıştırmak için CMakeLists.txt' yi aşağıdaki gibi düzenlemeniz gerekir.
+
+[source, c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(sample1)
+
+set(CMAKE_CXX_STANDARD 14)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample1 main.cpp)
+
+target_link_libraries(sample1  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+ false
+ 
+ 
+*Boost::regex_match ():* Bir dizeyi
+normal ifadeyle karşılaştırır. Yalnızca ifade tüm dizeyle eşleşirse true değerini döndürür.
+
+*Boost::regex_search ():* Bir dizede normal ifade arar.
+
+
+Örneğin; boost::regex_search()
+
+[source,c++]
+----
+#include <boost/regex.hpp>
+#include <string>
+#include <iostream>
+
+int main()
+{
+    std::string metin = "Boost Libraries";
+    boost::regex expr{"(\\w+)\\metin(\\w+)"}; //normal bir ifadeyi tanımlar
+    boost::smatch what; //boost::regex_search(), sonuçları depolamak için kullanılan boost::smatch türündeki bir nesneye
+    // başvuru bekler. boost::regex_search() yalnızca grupları arar.
+    // Bu nedenle örnekte normal ifadede bulunan iki gruba dayalı iki dize döndürür.
+    if (boost::regex_search(metin, what, expr)) // metnin içerisinde expr değişkenini bulamadığı için if'e girmaz
+    {
+        std::cout << what[0] << '\n';
+        std::cout << what[1] << "_" << what[2] << '\n';
+    }
+}
+----
+
+Yine aynı şekilde CMakeLists.txt' yi aşağıdaki gibi düzenlemeniz gerekiyor.
+
+[source, c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample2)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample2 main.cpp)
+
+target_link_libraries(sample2  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+     
+     
+
+
+Örnekte Boost::regex_search(), sonuçları depolamak için
+kullanılan boost::smatch türündeki bir nesneye başvuru
+bekler. Boost:: regex_search () yalnızca grupları arar. Bu nedenle *örnekte* normal ifadede bulunan iki gruba dayanarak iki dize döndürür.
+
+Sonuç depolama sınıfı boost::smatch, std::vector
+öğesine benzer bir arabirimden erişilebilen boost ::
+sub_match türündeki öğelerini tutar. Örneğin, elemanlara [] operatörü üzerinden erişilebilir.
+
+Boost::sub_match sınıfı yineleyicileri, normal bir ifadenin gruplarına karşılık gelen bir dizede belirli konumlara depolar. 
+
+
+Örneğin; boost::regex_replace()
+
+Her zaman dizenin tamamında normal ifadeyi arar. Böylece, program aslında her üç boşluğu da alt çizgilerle değiştirir.
+
+[source, c++]
+----
+#include <boost/regex.hpp>
+#include <string>
+#include <iostream>
+
+int main()
+{
+    std::string metin = " Boost Libraries ";
+    boost::regex expr{"\\s"}; //normal bir ifadeyi tanımlar
+    std::string fmt{"_"}; //string değişken
+    std::cout << boost::regex_replace(metin, expr, fmt) << '\n';//metin değişkenindeki boşlukları _ ile değiştirir.
+
+    boost::regex expr2{"(\\w+)\\s(\\w+)"};
+    std::string fmt2{"\\2 \\1"};
+    std::cout << boost::regex_replace(metin, expr2, fmt2) << '\n'; //metin değişkenindeki kelimelerin yerlerini değiştirir
+}
+----
+
+Yine aynı şekilde CMakeLists.txt' yi aşağıdaki gibi düzenlemeniz gerekiyor.
+
+[source, c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample3)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "/home/asli/Downloads/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample3 main.cpp)
+
+target_link_libraries(sample3  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+
+ _Boost_Libraries_
+ Libraries Boost 
+
+
+Bu kütüphanenin nasıl kullanılabileceğini görmek için bir kredi kartı işleme uygulaması yazdığımızı düşünün. Kredi kartı numaraları genellikle 16 basamaklı bir dize halinde gelir, 4 basamaklı gruplara ayrılır ve boşluk veya kısa çizgi ile ayrılır. Bir kredi kartı numarasını bir veritabanında (müşterinizin takdir edeceği bir şey olması gerekmeden) saklamadan önce, numaranın doğru biçimde olduğunu doğrulamak isteyebiliriz. Herhangi bir rakamı eşleştirmek için normal ifadeyi [0-9] kullanabiliriz, ancak bunun gibi karakter aralıkları aslında yerel ayara bağlıdır. Bunun yerine POSIX standart formunu veya Boost.Regex'i kullanmalıyız.

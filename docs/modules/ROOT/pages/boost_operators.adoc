@@ -1,0 +1,47 @@
+== Boost.Operators
+
+Boost.Operators, operatörleri otomatik olarak aşırı yüklemek için çok sayıda sınıf sunar. Aşağıdaki örnekte, herhangi bir bildirim olmamasına rağmen, otomatik olarak daha büyük bir operatör eklenir, çünkü daha büyük olan operatör önceden tanımlanmış olan küçük operatör kullanılarak uygulanabilir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/operators.hpp>
+#include <string>
+#include <utility>
+#include <iostream>
+
+struct animal : public boost::less_than_comparable<animal>//boost::less_than_comparable ile tanımlanan struct
+{
+    std::string name;
+    int legs;
+
+    animal(std::string n, int l) : name{std::move(n)}, legs{l} {}//constructor değerleri
+
+    bool operator<(const animal &a) const { return legs < a.legs; }//legs küçükse gelen legs'ten legs döndürür
+    //bu işlemi operator ile yapar
+};
+
+int main()
+{
+    animal a1{"cat", 4};//boost::less_than_comparable tipindeki struct'a hayvanAdi ve bacakSayilari 'ni gönderir.
+    animal a2{"spider", 8};
+
+    std::cout << std::boolalpha << (a2 > a1) << '\n';//a2 struct'ındaki legs büyükse a1 struct'ındaki legs'ten std::boolalpha ile true döndürür.
+}
+----
+
+Ekran Çıktısı:
+
+ true
+
+
+
+Operatörleri otomatik olarak eklemek için Boost.Operators tarafından tanımlanan sınıflardan boost/operators.hpp satırı olan bir sınıf elde edin.Bir sınıf boost::less_than_comparable öğesinden türetilmişse, operator>, operator<=, and operator>= otomatik olarak tanımlanır.
+
+Birçok operatör diğer operatörler olarak ifade edilebildiğinden, otomatik aşırı yükleme mümkündür. Örneğin, boost::less_than_comparable, büyüktür operatörünün tersi olarak büyüktür operatörünü uygular; Bir nesne diğerinden daha az değilse, eşit olmadığı varsayılarak daha büyük olmalıdır.
+
+*boost::parti_ordered :* İki nesne eşitse, temel sınıf olarak  kullanılır. 
+
+Boost::less_than_comparable ve boost::partially_ordered'e ek olarak, aritmetik ve mantıksal operatörleri aşırı yüklemenize izin veren sınıflar sağlar. Sınıflar, genellikle yineleyiciler, işaretçiler veya diziler tarafından sağlanan aşırı yüklü fonksiyonlar için de kullanılabilir. Otomatik aşırı yükleme ancak diğer operatörler tanımlandıktan sonra mümkün olabileceğinden, sağlanması gereken özel operatörler duruma bağlı olarak değişecektir. 
+

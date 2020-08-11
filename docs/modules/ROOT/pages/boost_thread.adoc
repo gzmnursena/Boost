@@ -1,0 +1,182 @@
+== Boost.Thread
+
+Boos.Thread iş parçacıklarını kullanmanızı sağlayan kitaplıktır. Ayrıca, birden çok iş parçacığı tarafından paylaşılan verilere erişimi senkronize etmek için sınıflar sağlar.
+
+Konular C + + 11'den beri standart kütüphane tarafından desteklenmektedir. Ayrıca standart kitaplıkta iş parçacıklarının oluşturulabileceği ve senkronize edilebileceği sınıflar bulacaksınız. Boost.Thread birçok açıdan standart kütüphaneye benzese de uzantılar sunuyor. Örneğin, Boost.Thread ile oluşturulan konuları kesebilirsiniz. 
+Ayrıca Boost.Thread'de C + + 14 ile standart kütüphaneye eklenecek özel kilitler de  bulacaksınız. Bu nedenle, bir C + + 11 geliştirme ortamında çalışsanız bile Boost.Thread'i kullanmak mantıklı olabilir.
+
+
+Bu kütüphanedeki en önemli sınıf boost/thread.hpp dosyasında tanımlanan boost::thread öğesidir. Bu sınıf yeni bir iş parçacığı oluşturmak için kullanılır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+#include <iostream>
+
+
+void wait(int seconds)
+{
+    boost::this_thread::sleep_for(boost::chrono::seconds{seconds});// thread'i saniye cinsinden bekletir
+}
+
+void thread()
+{
+    for (int i = 0; i < 5; ++i)
+    {
+        std::cout << i << '\n';
+        wait(1); //işlemi 1 defa yapar
+    }
+}
+
+int main()
+{
+    boost::thread t{thread};//thread'i çağırır
+    t.join();//main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+}
+----
+
+Ekran Çıktısı:
+
+ 0
+
+
+Yeni iş parçacığının çalışması gereken fonksiyonun adı boost::thread yapıcısına iletilir. Örnekteki t değişkeni oluşturulduktan sonra, thread() hemen kendi thread() fonksiyonunu çalıştırmaya başlar. Bu noktada, thread() fonksiyonu main() fonksiyonu ile eşzamanlı olarak çalışır.
+
+Programın sona ermesini engellemek için yeni thread oluşturulan yerde join() fonksiyonunu çağrılır. Join() fonksiyonu, main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+#include <iostream>
+
+void wait(int seconds)
+{
+  boost::this_thread::sleep_for(boost::chrono::seconds{seconds});//thread'i saniye cinsinden bekletir
+}
+
+void thread()
+{
+  try
+  {
+    for (int i = 0; i < 5; ++i)
+    {
+      wait(1);//1 saniye bekleterek yazdırır
+      std::cout << i << '\n';//ekrana i'yi yazar
+    }
+  }
+  catch (boost::thread_interrupted&) {}//çalışmaz ise exception olarak thread_interrupted atar
+}
+
+int main()
+{
+  boost::thread t{thread};//thread'i çağırır
+  wait(3);//işlemi 3 defa yapar
+  t.interrupt();//araya kesme atarak zamanı yavaşlatır
+  t.join();//main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+}
+----
+
+Ekran Çıktısı:
+
+ 0
+ 1
+ 2
+ 
+Bir thread nesnesinde interrupt() çağrıldığında thread'i kesintiye uğratır. Bu bağlamda, interrupt ile boost::thread_interrupted türünde bir istisnanın atılmış olduğu anlamına gelir. Ancak, bu yalnızca thread bir kesinti noktasına ulaştığında olur.
+
+Verilen thread bir kesme noktası içermiyorsa, sadece interrupt() metodunun çağırmanın bir etkisi olmaz. Bir iş parçacığı bir kesinti noktasına ulaştığında, interrupt() fonksiyonu çağrılıp çağrılmadığını kontrol eder. Eğer çağrılmışsa, boost::thread_interrupted türünde bir istisna atılır.
+
+Boost.Thread, sleep_for() fonksiyonu gibi bir dizi kesinti noktası tanımlar. Sleep_for (), Örnekte beş kez çağrıldığından, thread'in kesintiye uğrayıp uğramadığını beş kez denetler. Sleep_for() çağrıları arasında, thread kesilemez.
+
+Örnekte beş sayı görüntülemez, çünkü main() fonksiyonunda üç saniye sonra interrupt() çağrılır. Böylece, karşılık gelen thread kesilir ve bir boost::thread_interrupted istisna atar. Exception boş olsa bile kural dışı durum, thread'in içine doğru şekilde takılır. Thread() fonksiyonu işleyiciden sonra döndüğünden, iş parçacığı da sona erer. Bu da, main() iş parçacığının sona ermesini beklediği için programın sonlanmasına neden olur.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+#include <iostream>
+
+void wait(int seconds)
+{
+  boost::this_thread::sleep_for(boost::chrono::seconds{seconds});//thread'i saniye cinsinden bekletir
+}
+
+void thread()
+{
+
+  try
+  {
+    for (int i = 0; i < 5; ++i)
+    {
+      wait(1);//1 saniye bekleterek yazdırır
+      std::cout << i << '\n';//ekrana i'yi yazar
+    }
+  }
+  catch (boost::thread_interrupted&) {}//çalışmaz ise exception olarak thread_interrupted atar
+}
+
+int main()
+{
+  boost::thread::attributes attrs;//thread'in özniteliklerini ayarlamak için kullanılır.
+  attrs.set_stack_size(1024);//yığın boyutu 1024 bayta ayarlanır.
+  boost::thread t{attrs, thread};//thread çağırılır.
+  t.join();//main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+}
+----
+
+Ekran Çıktısı:
+
+ Process finished with exit code 139 (interrupted by signal 11: SIGSEGV)
+
+
+
+*boost::thread::attributes:* Thread'in özniteliklerini ayarlamak için kullanılır. 
+
+Örnekte, yığın boyutu boost::thread::attributes::set_stack_size() ile 1024 bayta ayarlanır.
+
+
+Kodların doğru bir şekilde çalışması için CMakeLists.txt dosyası aşağıdaki gibi düzenlenmelidir.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(sample3)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/asli/Downloads/boost_1_71_0/")
+
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+find_package(Boost 1.71.0
+        REQUIRED date_time filesystem system iostreams thread unit_test_framework
+        ${BOOST_PYTHON})
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample3 main.cpp)
+
+target_link_libraries(sample3  ${Boost_LIBRARIES})
+----
+

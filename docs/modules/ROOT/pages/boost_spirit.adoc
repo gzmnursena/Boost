@@ -1,0 +1,63 @@
+== Boost.Spirit
+
+Boost.Spirit, metin biçimleri için ayrıştırıcılar
+geliştirmek için kullanılır.
+Örneğin, yapılandırma dosyalarını yüklemek üzere bir
+ayrıştırıcı geliştirmek için
+Boost.Spirit'i kullanabilirsiniz. Boost.Spirit aynı
+zamanda ikili formatlar için de kullanılabilir, ancak bu
+konuda faydası sınırlıdır.
+
+Kurallarla tanımlandığından ayrıştırıcıların geliştirilmesini basitleştirir. Kurallar bir formatın nasıl görüneceğini tanımlar.Boost.Spirit gerisini halleder. 
+
+Boost.Spirit'in iki versiyonu vardır. İlk versiyon Spirit.Classic olarak bilinir. Bu versiyonu artık kullanılmamalıdır. Mevcut sürüm 2.5.2'dir. Bu, bu bölümde sunulan sürümdür.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/spirit/include/qi.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::spirit;
+
+int main()
+{
+    std::string s;
+
+    while(s!="0")
+    {
+        std::getline(std::cin, s);//kullanıcıdan veri girişi beklenir
+        auto it = s.begin();//auto tipindeki değişkene kullanıcı tarafından girilen ifadenin başlangıç indeksi atanır
+        bool match = qi::phrase_parse(it, s.end(), ascii::digit, ascii::space);//qi::phrase_parse ile string'in başlangıc
+        // indeksinden bitiş indeksine kadar gider. 0-9 arası rakamları ve ascii::space ile boşlukları algılar.
+
+        //ascii::space =boşlukları algılamak için karakter sınıflandırıcısıdır.
+
+        std::cout << std::boolalpha << match << '\n';//Eğer yukarıdaki kriterleri sağlarsa true-false döndürür
+        if (it != s.end())//yukarıdaki kriterlere göre string'in sonuna kadar gidebiliyorsa
+            std::cout << std::string{it, s.end()} << '\n';//girilen string'i ekrana yazar
+
+        std::cout<<"----\n";
+    }
+//Program kullanıcı 0 girene kadar veri girişi bekler
+}
+
+//Örneği başlatır ve ardından bir rakam ve ardından bir boşluk girerseniz, doğru görüntülenir
+----
+
+
+Ekran Çıktısı:
+
+ asli
+ false
+ asli
+ ----
+ a 2
+ false
+ a 2
+ ----
+
+

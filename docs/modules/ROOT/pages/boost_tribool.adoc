@@ -1,0 +1,75 @@
+== Boost.Tribool
+
+Boost.Tribool kütüphanesi, bool' a benzer olan boost::logic::tribool sınıfını sağlar. Ancak, bool iki durumu ayırt edebilirken, boost::logic::tribool üçüncü durumuda ele alır.
+
+Boost::logic::tribool kullanmak için boost/logic/tribool.hpp satırını dosyanın başına ekleyin.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/logic/tribool.hpp>
+#include <iostream>
+
+using namespace boost::logic;
+
+int main()
+{
+    tribool b;//boost::logic::tribool türünde bir değişken true, false veya indeterminate(belirsiz) olarak ayarlanabilir
+    std::cout << std::boolalpha << b << '\n';//sonucun 0-1 olarak değilde true-false olarak döndürülmesini sağlar.
+
+    b = true;//b değişkenine önce true sonra false değerleri atanarak false ile başlatılır.
+    b = false;
+    b = indeterminate;//b değişkenine daha sonra indeterminate atanır.
+    if (b)
+        ;
+    else if (!b)
+        ;
+    else
+        std::cout << "indeterminate\n";
+    //değişkenin true yada false olup olmadığını kontrol eder.
+    //Değişken örnekte olduğu gibi indeterminate olarak ayarlanırsa, else bloğu yürütülür.
+
+   std::cout<<"---- \n";
+
+    tribool b1 = true;//b1 tribool değişkenine true değeri atanır
+    std::cout <<"true || indeterminate: "<< (b1 || indeterminate) << '\n';//true || indeterminate = true
+    std::cout <<"true && indeterminate: "<< (b1 && indeterminate) << '\n';//true && indeterminate = false
+
+    tribool b2 = false;//b2 tribool değişkenine false değeri atanır
+    std::cout <<"false || indeterminate: "<< (b2 || indeterminate) << '\n';//false || indeterminate = false
+    std::cout <<"false && indeterminate: "<< (b2 && indeterminate) << '\n';//false && indeterminate = false
+
+    tribool b3 = indeterminate;//b3 tribool değişkenine indeterminate değeri atanır
+    std::cout <<"indeterminate || indeterminat: "<< (b3 || b3) << '\n';//indeterminate || indeterminate = false
+    std::cout <<"indeterminate && indeterminate: "<< (b3 && b3) << '\n';//indeterminate && indeterminate = false
+}
+----
+
+Ekran Çıktısı:
+
+ false
+ indeterminate
+ ---- 
+ true || indeterminate: true
+ true && indeterminate: false
+ false || indeterminate: false
+ false && indeterminate: false
+ indeterminate || indeterminat: false
+ indeterminate && indeterminate: false
+
+
+Boost::logic::tribool türünde bir değişken true, false veya indeterminate(belirsiz) olarak ayarlanabilir. Varsayılan bool değişkeni false olarak başlatır. Bu yüzden yukarıdaki örnekte önce false yazar.
+
+Örnekteki if ifadesi, b'nin nasıl doğru değerlendirileceğini gösterir. True yada false olup olmadığını kontrol eder. Değişken örnekte olduğu gibi indeterminate olarak ayarlanırsa, else bloğu yürütülür.
+
+Boost.Tribool ayrıca boost::logic::indeterminate() fonksiyonunu da sağlar. Belirsiz olarak ayarlanmış boost::logic::tribool türünde bir değişken iletirseniz, bu fonksiyon true değerini döndürecektir. Değişken true veya false olarak ayarlanırsa false döndürür.
+
+
+Bool türü değişkenlerde olduğu gibi boost::logic::tribool türünde değişkenlere sahip mantıksal operatörleri kullanabilirsiniz. Aslında, sınıf herhangi bir fonksiyonu sağlamadığından boost::logic::tribool türündeki değişkenle ile işlem yapmanın tek yolu budur.
+
+b1 || indeterminate için true, b2 && indeterminate için false ve diğer tüm durumlarda indeterminate döndürür. İşlemlere ve sonuçlarına bakarsanız, boost::logic::tribool'un sezgisel olarak beklendiği gibi davrandığını göreceksiniz. Boost.Tribool belgeleri, hangi işlemlerin hangi sonuçlara yol açtığını gösteren tablolar da içerir.
+
+Örnekte ayrıca true, false ve indeterminate değerlerinin boost::logic::tribool tipindeki değişkenlerle standart çıktıya nasıl yazıldığını gösterir. Boost/logic/tribool_io.hpp başlık dosyası eklenmeli ve standart çıktı için std::ios::boolalpha  ayarlanmalıdır.
+
+Boost.Tribool ayrıca indeterminate başka bir değeri değiştirmenize izin veren BOOST_TRIBOOL_THIRD_STATE da sağlar. Örneğin, indeterminate yerine *dontknow* kullanabilirsiniz.

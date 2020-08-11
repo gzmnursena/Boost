@@ -1,0 +1,41 @@
+== Boost.CompressedPair
+
+Boost.CompressedPair, std::pair gibi davranan bir sınıf olan boost::compressed_pair öğesini sağlar. Ancak, şablon parametrelerinden biri veya her ikisi de boş sınıflarsa, boost::compressed_pair daha az bellek tüketir. Boost::compressed_pair, boş temel sınıf optimizasyonu olarak bilinen bir teknik kullanır.
+
+Boost::compressed_pair kullanmak için boost/compressed_pair.hpp satırı dosyanın başına eklenir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/compressed_pair.hpp>
+#include <utility>
+#include <iostream>
+
+struct empty {};
+
+int main()
+{
+    //std::pair : farklı tiplerde (T1 ve T2) olabilen bir çift değeri birleştirir.
+    std::pair<int, empty> p;//p değişkenini std::pair kullanarak göstermektedir.
+    std::cout << sizeof(p) << '\n';//std::pair türündeki p değişkeninin boyutu= 8
+    
+    boost::compressed_pair<int, empty> cp;//cp değişkenini ile boost::compressed_pair kullanarak göstermektedir.
+    std::cout << sizeof(cp) << '\n'; // boost::compressed_pair türündeki cp değişkeninin boyutu= 4
+}
+----
+ 
+Ekran Çıktısı:
+
+ 8
+ 4
+
+
+Örnekte, cp değişkeni ile boost::compressed_pair ve p değişkeni ile std::pair kullanarak göstermektedir.
+Visual C + + 2013 kullanılarak derlendiğinde ve 64 bit Windows 7 sisteminde çalıştırıldığında, örnek sizeof (cp) için 4 ve sizeof (p) için 8 döndürür.
+
+* boost::compressed_pair ve std::pair arasında başka bir fark daha vardır:  boost::compressed_pair'a  depolanan değerlere first() ve second() fonksiyonları aracılığıyla erişilir. std::pair yerine iki aynı adlı üye değişkenleri kullanır.
+
+ 
+ 

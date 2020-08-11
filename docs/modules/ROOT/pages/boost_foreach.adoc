@@ -1,0 +1,55 @@
+== Boost.Foreach
+
+Boost.Foreach, C + + 11'den döngü için aralık tabanlı simüle eden bir kullanım sağlar. boost/foreach.hpp'de tanımlanan BOOST_FOREACH yineleyiciler kullanmadan bir sekans üzerinde yineleme yapmak için kullanabilirsiniz. Geliştirme ortamınız C + + 11'i destekliyorsa, Boost.Foreach'u yok sayabilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/foreach.hpp>
+#include <array>
+#include <iostream>
+
+int main()
+{
+  std::array<int, 4> dizi{{0, 1, 2, 3}};
+
+  BOOST_FOREACH(int &i, dizi)//ilk parametre degisken, ikinci parametre dizidir. parametre tiplerinin ayni olamsi gerekir.
+  {
+      i *= i;
+      std::cout << i << '\n';//dizi elemanlarının karelerini yazdirir.
+  }
+
+
+  BOOST_REVERSE_FOREACH(int i, dizi)
+  {
+    std::cout << i << '\n';//dizi elemanlarini tersten yazdirir.
+  }
+}
+----
+
+Ekran Çıktısı:
+
+ 0
+ 1
+ 4
+ 9
+ 9
+ 4
+ 1
+ 0
+
+BOOST_FOREACH iki parametre bekliyor. İlk parametre bir değişken veya referanstır ve ikincisi bir dizidir. Birinci ve ikinci parametrelerin türlerinin aynı olması gerekir.
+
+
+Örnekte, BOOST_FOREACH ile std::array türünde bir dizi üzerinden yazdırılır. Geçirilen ilk parametre bir dizidir, böylece dizideki verileri hem okuyabilir hem de değiştirebilirsiniz. Örnekteki ilk döngüde her sayıyı kendisiyle çarpar.
+
+İkinci döngü, BOOST_FOREACH ile aynı şekilde çalışan ancak bir sekans üzerinde geriye doğru yinelenen BOOST_REVERSE_FOREACH makrosunu kullanır. Döngü 9, 4, 1 ve 0 sayılarını bu sırayla standart çıkış akışına yazar.
+
+[IMPORTANT]
+====
+Her zaman olduğu gibi, blok sadece bir ifadeden oluşuyorsa, kıvırcık parantezler atlanabilir.
+====
+
+Döngü içindeki yineleyiciyi geçersiz kılan işlemleri kullanmamanız gerektiğini lütfen unutmayın. Örneğin, bir vektör üzerinden tekrarlanırken elemanlar eklenmemeli veya çıkarılmamalıdır. BOOST_FOREACH ve BOOST_REVERSE_FOREACH, yineleyicilerin tüm yineleme boyunca geçerli olmasını gerektirir.
+

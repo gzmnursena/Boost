@@ -1,0 +1,425 @@
+== Boost.Filesystem
+
+Boost.Filesystem kütüphanesi dosya ve dizinlerle çalışmayı kolaylaştırır. Yolları işleyen boost::filesystem::path adlı bir sınıf sağlar. Buna ek olarak, dizin oluşturma veya bir dosyanın var olup olmadığını kontrol etme gibi görevleri yerine getirmek için birçok bağımsız işlev kullanılabilir.
+
+= Paths
+
+Boost::filesystem::path, yolları temsil etmek ve işlemek için Boost.Filesystem içindeki merkezi sınıftır. Tanımlar, boost::filesystem ad alanında ve boost/filesystem.hpp başlık dosyasında bulunabilir. Yollar boost::filesystem::path yapıcısına bir dize geçirilerek oluşturulabilir.
+
+Örneğin;
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using namespace std;
+
+
+int main()
+{
+    // boost::filesystem::path kütüphanesi ile yollar tanımlanabilir.
+    path p1{"C:\\"};
+    path p2{"C:\\Windows"};
+    path p3{L"C:\\Boost C++ \u5E93"};
+
+    /*native(), string() ve wstring() işlevlerini tüm yerel yol biçiminde döndürür.
+    Windows'ta çalıştırıldığında, örnekte, standart çıktı akışına üç kez C: \\ Windows \\ System yazar.*/
+
+    path p{"C:\\Windows\\System"};
+
+    #ifdef BOOST_WINDOWS_API
+    std::wcout << p.native() << endl;
+    #else
+    std::cout << p.native() << endl;
+    #endif
+
+    std::cout << p.string() << endl;
+    std::wcout << p.wstring() << endl;
+
+    std::cout << p.generic_string() << endl;
+    std::wcout << p.generic_wstring() << endl;
+    // hem generic_string() hem de generic_wstring(), standart çıkış akışına C: / Windows / System yazar.*
+
+    std::cout << p.root_name() << endl;
+    std::cout << p.root_directory() << endl;
+    std::cout << p.root_path() << endl;
+    std::cout << p.relative_path() << endl;
+    std::cout << p.parent_path() << endl;
+    std::cout << p.filename() << endl;
+   /* Üye işlevlerinin çoğu, 'C: \\ Windows \\ System' döndüren relative_path () ve dosyaadı () dışında boş bir dize döndürür.
+    Bu, “C: \\\\ Windows \\\\ System” dizesinin Linux
+    'ta bir dosya adı olarak yorumlandığı anlamına gelir; bu, ne bir yolun taşınabilir bir kodlaması ne de Linux'ta
+    platforma bağlı bir kodlama olmadığı anlaşılabilir. Bu nedenle, Boost.Filesystem'ın bir dosya adı olarak yorumlamaktan
+    başka seçeneği yoktur.*/
+}
+----
+
+Kodun doğru bir şekilde çalışması için CMakeLists'i aşağıdaki gibi düzenleyelim.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample_1)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample_1 main.cpp)
+
+target_link_libraries(sample_1  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+
+ C:\Windows\System
+ C:\Windows\System
+ C:\Windows\System
+ C:\Windows\System
+ C:\Windows\System
+ ""
+ ""
+ ""
+ "C:\Windows\System"
+ ""
+ "C:\Windows\System"
+
+boost::filesystem::path geniş dizelerle başlatılabilir. Geniş dizeler Unicode olarak yorumlanır ve neredeyse her dilden karakterler kullanarak yol oluşturmayı kolaylaştırır. Bu, farklı dize türleri için boost::filesystem::path ve boost::filesystem::wpath gibi ayrı sınıflar sağlayan Boost.Filesystem 2'den önemli bir farktır.
+
+Boost.Filesystem'ın std::u16string veya std::u32string'i desteklemediğini lütfen unutmayın. Bu dize türlerinden biriyle boost::filesystem::path başlatmaya çalışırsanız derleyiciniz hatayla iptal edilir.
+
+Boost::filesystem::path yapıcılarının hiçbiri yolları doğrulamaz veya belirtilen dosya veya dizinin mevcut olup olmadığını kontrol etmez. Böylece, boost::filesystem::path, anlamsız yollarla bile somutlaştırılabilir.
+
+Üye, native(), string() ve wstring() işlevlerini tüm yerel yol biçiminde döndürür. Windows'ta çalıştırıldığında, örnekte, standart çıktı akışına üç kez C: \\ Windows \\ System yazar.
+
+Üye işlevleri generic_string() ve generic_wstring(), yolları genel bir biçimde döndürür. Bunlar taşınabilir yollardır; POSIX standardının kurallarına göre normalleştirilir. Bu nedenle genel yollar Linux'ta kullanılan yollarla aynıdır. Örneğin, eğik çizgi dizinler için ayırıcı olarak kullanılır. Örnekte Windows'ta çalışıyorsa, hem generic_string() hem de generic_wstring(), standart çıkış akışına C: / Windows / System yazar.
+
+Boost::filesystem::path farklı dize türleriyle başlatılabildiğinden, farklı dize türlerindeki yolları almak için birkaç üye işlevi sağlanır. string() ve generic_string (), std::string türünde bir dize döndürürken, wstring() ve generic_wstring(), std::wstring türünde bir dize döndürür.
+
+native() dönüş türü, programın derlendiği işletim sistemine bağlıdır. Windows'ta std::wstring türünde bir dize döndürülür. Linux'ta std::string türünde bir dizedir.
+
+BOOST_WINDOWS_API makrosu Boost.System'dan gelir ve örnek Windows'ta derlenmişse tanımlanır. POSIX işletim sistemleri için ilgili makroya BOOST_POSIX_API adı verilir.
+
+Örnek Linux'ta yürütülürse, döndürülen değerler farklıdır. Üye işlevlerinin çoğu, 'C: \\ Windows \\ System' döndüren relative_path () ve dosyaadı () dışında boş bir dize döndürür. Bu, “C: \\\\ Windows \\\\ System” dizesinin Linux'ta bir dosya adı olarak yorumlandığı anlamına gelir; bu, ne bir yolun taşınabilir bir kodlaması ne de Linux'ta platforma bağlı bir kodlama olmadığı anlaşılabilir. Bu nedenle, Boost.Filesystem'ın bir dosya adı olarak yorumlamaktan başka seçeneği yoktur.
+
+Örnek Windows'ta yürütülürse, “C: \\\\ Windows \\\\ System” dizesi platforma bağlı bir yol olarak yorumlanır. Sonuç olarak, root_name () 'C:', root_directory () '\\', root_path () 'C: \\', relative_path () 'Windows \\ System', parent_path () 'C: \\ Windows', Ve dosyaadı () 'Sistem' i döndürür.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using namespace std;
+
+int main()
+{
+    path p{"photo.jpg"};
+    cout << p.stem() << endl;
+    cout << p.extension() << endl;
+
+    // örnek stem() için 'photo' ve extension() için '.jpg' değerini döndürür.
+}
+----
+
+Ekrana Çıktısı:
+
+ "photo"
+ ".jpg"
+ 
+ 
+= Dosyalar ve Dizinler
+
+boost::filesystem::path ile sunulan üye fonksiyonlar dizeleri işler. Bir yolun tek tek bileşenlerine erişirler, birbirlerine yollar eklerler, vb.
+
+Sabit sürücüdeki fiziksel dosyalar ve dizinlerle çalışmak için birkaç bağımsız işlev sağlanır. Dahili olarak bir veya daha fazla boost::filesystem::path parametresi bekler ve işletim sistemi işlevlerini çağırırlar.
+
+
+Örneğin;
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+
+int main()
+{
+  path p{"C:\\"};
+  try
+  {
+    file_status s = status(p);
+    std::cout << std::boolalpha << is_directory(s) << '\n';
+  }
+  catch (filesystem_error &e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+}
+----
+
+Kodun doğru bir şekilde çalışması için CMakeLists.txt dosyasını aşağıdaki gibi düzenleyelim.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample_3)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample_3 main.cpp)
+
+target_link_libraries(sample_3  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+
+ false
+ 
+Yukarıdaki örnek bir dosya veya dizinin durumunu sorgulayan boost::filesystem::status() işlevini sunar. Bu işlev, değerlendirme için ek yardımcı işlevlere aktarılabilen boost::filesystem::file_status türünde bir nesne döndürür. Örneğin, bir dizinin durumu sorgulandığında boost::filesystem::is_directory() işlevi true değerini döndürür. 
+
+Örneğin;
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using namespace std;
+
+int main()
+{
+  path p{"/home/yapbenzet/Documents/"};
+  try
+  {
+    file_status s = status(p);
+    std::cout << std::boolalpha << is_directory(s) << endl;
+    //Dosya dizin içerisinde ise std::boolalpha ile true yada false döndürür.
+  }
+  catch (filesystem_error &e)
+  {
+    std::cerr << e.what() << endl; //Dosya bulunamıyorsa hatayı ekrana yazar.
+  }
+
+  try
+  {
+      std::time_t t = last_write_time(p); //Bir dosyanın en son değiştirilme zamanını verir.
+      std::cout << std::ctime(&t) << endl;
+  }
+  catch (filesystem_error &e)
+  {
+      std::cerr << e.what() << endl; //Dosya bulunamıyorsa hatayı ekrana yazar.
+  }
+}
+----
+
+
+* Kodun doğru çalışması için CMakeLists.txt dosyasında gerekli kodlar yazılır.
+
+Ekran Çıktısı:
+ true
+ Tue Jan 21 12:33:12 2020
+ 
+Örneğin;
+
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using  namespace std;
+
+int main()
+{
+    //boost::filesystem::space() toplam ve kalan disk alanını verir.
+  path p{"/home/yapbenzet/Documents/"};
+  try
+  {
+    space_info s = space(p);
+    std::cout << s.capacity << endl;
+    std::cout << s.free << endl;
+    std::cout << s.available << endl;
+  }
+  catch (filesystem_error &e)
+  {
+    std::cerr << e.what() << endl;
+  }
+}
+----
+
+Kodun doğru bir şekilde çalışması için CMakeLists'i aşağıdaki gibi düzenleyelim.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample_4)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample_4 main.cpp)
+
+target_link_libraries(sample_4  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+
+ 177111629824
+ 81913556992
+ 72893181952
+
+Boost::filesystem::space() toplam ve kalan disk alanını alır. Üç ortak üye değişkeni sağlayan boost::filesystem ::space_info türünde bir nesne döndürür. Disk alanı bayt cinsindendir.
+
+Örneğin;
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using  namespace std;
+
+int main()
+{
+    path p{"C:\\Test"};// dosyanın yolunu verir.
+    try
+    {
+        if (create_directory(p)) //dosya varsa
+        {
+            rename(p, "C:\\Test2"); //dosyanın yolunu vererek dosyanın adını değiştirir.
+            boost::filesystem::remove("C:\\Test2");// Adı değiştirilen dosyayı siler.
+        }
+    }
+    catch (filesystem_error &e)// dosya yoksa
+    {
+        std::cerr << e.what() << endl;
+    }
+}
+----
+
+CMakeLists.txt dosyasını yukarıdaki örneklere göre düzenleyin!
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using namespace std;
+int main()
+{
+    try
+    {
+        cout<< "girdiii"<< endl;
+        cout << absolute("photo.jpg") << endl;
+        std::cout << absolute("photo.jpg", "D:\\") << endl; // Yolu D:\\photo.jpg olarak gösterir.
+
+        std::cout << current_path() << endl;
+        current_path("C:\\");
+        std::cout << current_path() << endl;
+        // current_path():: geçerli çalışma dizini döndürür
+    }
+    catch (filesystem_error &e)
+    {
+        std::cerr << e.what() << endl;
+    }
+}
+/*absolute: bir dosya adına veya yolun bir bölümüne dayalı olarak mutlak bir yol oluşturan bir işlevi sunar.
+Görüntülenen yol, programın başlatıldığı dizine bağlıdır.
+Örneğin, program C: \\ 'da başlatılmışsa, çıktı 'C: \\ photo.jpg' olur.*/
+----
+
+Ekran Çıktısı:
+ girdiii
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-6/cmake-build-debug/photo.jpg"
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-6/cmake-build-debug/D:\/photo.jpg"
+ 
+*absolute: * bir dosya adına veya yolun bir bölümüne dayalı olarak mutlak bir yol oluşturan bir işlevi sunar.
+Görüntülenen yol, programın başlatıldığı dizine bağlıdır.
+Örneğin, program C: \\ 'da başlatılmışsa, çıktı 'C: \\ photo.jpg' olur.
+
+*current_path():* Geçerli çalışma dizini döndürür.
+
+
+= Directory Iterators
+
+Boost.Filesystem bir dizindeki dosyaları yinelemek için yineleyici boost::filesystem::directory_iterator sağlar.
+
+Örneğin;
+[source,c++]
+----
+#include <boost/filesystem.hpp>
+#include <iostream>
+
+using namespace boost::filesystem;
+using  namespace std;
+
+/*Boost::filesystem::directory_iterator, bir dizinin başına işaret eden bir yineleyici alma yolu ile başlatılır.
+ Bir dizinin sonunu almak için sınıfın varsayılan kurucu ile başlatılması gerekir.*/
+
+int main()
+{
+    path p = current_path();
+    directory_iterator it{p};
+    while (it != directory_iterator{})
+        cout << *it++ << endl;
+}
+----
+
+CMakeLists.txt dosyasını yukarıdaki örneklere göre düzenleyin!
+
+Ekran Çıktısı:
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-7/cmake-build-debug/CMakeCache.txt"
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-7/cmake-build-debug/CMakeFiles"
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-7/cmake-build-debug/sample_7"
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-7/cmake-build-debug/sample_7.cbp"
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-7/cmake-build-debug/cmake_install.cmake"
+ "/home/yapbenzet/Documents/boost_calismalar/Boost.Filesystem/sample-7/cmake-build-debug/Makefile"
+
+ 
+Boost::filesystem::directory_iterator, bir dizinin başına işaret eden bir yineleyici alma yolu ile başlatılır. Bir dizinin sonunu almak için sınıfın varsayılan kurucu ile başlatılması gerekir.
+
+Yinelemeler geçersiz kılmadan yineleme sırasında girişler oluşturulabilir veya silinebilir. Ancak, değişikliklerin yineleme sırasında görünür hale gelip gelmediği tanımlanmamıştır. Örneğin, yineleyici yeni oluşturulan dosyaları göstermeyebilir. Geçerli tüm girişlerin erişilebilir olduğundan emin olmak için yinelemeyi yeniden başlatın.
+
+Bir dizin ve alt dizinler üzerinde yinelemeli olarak yineleme yapmak için Boost.Filesystem yineleyici boost::filesystem::recursive_directory_iterator öğesini sağlar.
+
+
+
+
+
+
+

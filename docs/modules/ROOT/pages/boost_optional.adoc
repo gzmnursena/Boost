@@ -1,0 +1,89 @@
+== Boost.Optional
+
+Boost.Optional kütüphanesi, isteğe bağlı dönüş değerleri için kullanılabilen boost::optional sınıfını sağlar. Bunlar, her zaman bir sonuç döndürmeyebilecek fonksiyonlardan döndürülen değerlerdir.
+
+[source,c++]
+----
+#include <boost/optional.hpp>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
+int get_even_random_number()
+{
+    int sayi= std::rand();//rastgele sayi üretir
+    return (sayi % 2 == 0) ? sayi : -1;//üretilen sayı çift ise sayi'yi, tek ise -1 değerini döndürür.
+}
+
+using boost::optional;
+
+optional<int> get_even_random_number2() {
+    int sayi2 = std::rand();//get_even_random_number2() ikiye tam bölünen rastgele bir sayı üretirse, değer doğrudan döndürülür,
+    // otomatik olarak boost::optional <int> türünde bir nesneye sarılır, çünkü boost::optional özel olmayan bir yapıcı sağlar.
+    // get_even_random_number2() eşit ikiye tam bölünmeyen sayı üretirse, boost::optional<int> türünde boş bir nesne döndürülür.
+    return (sayi2 % 2 == 0) ? sayi2 : optional<int>{};
+}
+
+
+optional<int> get_even_random_number3()
+{
+    int sayi3 = std::rand();//boost::optional diğer fonksiyonları da sunar. Bu sınıf, ilk parametre olarak bir koşul alan
+    // özel bir kurucu sağlar. Koşul true olursa, ikinci parametre ile boost::optional türünde bir nesne başlatılır.
+    // Koşul yanlışsa, boost::optional türünde boş bir nesne oluşturulur.
+
+    return optional<int>{sayi3 % 2 == 0, sayi3};
+}
+
+
+
+int main()
+{
+    std::srand(static_cast<unsigned int>(std::time(0)));
+    int sayi = get_even_random_number();//get_even_random_number(): çift ratgele sayı döndüren bir fonksiyondur.
+    //std::rand() fonksiyonunu çağırarak çalışır.Oluşturulan rastgele sayı tekse, -1 döndürülür.
+
+
+    if (sayi != -1)//sayi çift ise
+        std::cout << std::sqrt(static_cast<float>(sayi)) << '\n';//sayiyi float'a çevirerek yazar.
+
+    std::cout<<"----\n";
+
+
+    optional<int> sayi2 = get_even_random_number2();//get_even_random_number2 fonksiyonu yukarıdaki fonksiyon ile aynı mantıkta çalışır.
+    //tek fark optional<int> bir değişken ile geri dönüş yapmasıdır
+    if (sayi2)
+        std::cout << std::sqrt(static_cast<float>(*sayi2)) << '\n';
+
+    std::cout<<"----\n";
+
+
+    optional<int> sayi3 = get_even_random_number3();
+    if (sayi3.is_initialized())//is_initialized():  boost::optional bir nesnenin boş olup olmadığını kontrol edebilirsiniz.
+            std::cout << std::sqrt(static_cast<float>(sayi3.get())) << '\n';
+}
+----
+
+
+Ekran Çıktısı:
+
+    28611.2
+    ----
+    29669.3
+    ----
+    38662.1
+    
+    
+
+get_even_random_number() fonksiyonunda, isteğe bağlı dönüş değerlerinin genellikle Boost.Optional olmadan nasıl uygulandığını gösterir.
+Örnekte, çift rasgele bir sayı döndürmesi gereken get_even_random_number() fonksiyonunu kullanır. Bu işlemi standart kütüphaneden std::rand() fonksiyonunu çağırarak yapar. Std::rand() çift rastgele bir sayı oluşturuyorsa, bu sayı get_even_random_number() ile döndürülür. Oluşturulan rastgele sayı tekse, -1 döndürülür.
+Bu örnekte -1, rastgele bir sayının bile üretilemeyeceği anlamına gelir. Bu nedenle, get_even_random_number(), rastgele bir sayının döndürüldüğünü garanti edemez. Dönüş değeri isteğe bağlıdır.
+
+
+get_even_random_number2() fonksiyonunda ikiye tam bölünen rastgele bir sayı üretirse, değer doğrudan döndürülür,
+otomatik olarak boost::optional <int> türünde bir nesneye sarılır, çünkü boost::optional özel olmayan bir yapıcı sağlar.
+get_even_random_number2() ikiye tam bölünmeyen sayı üretirse, boost::optional<int> türünde boş bir nesne döndürülür.
+
+
+get_even_random_number3() fonksiyonunda boost::optional diğer fonksiyonları da sunar. Bu sınıf, ilk parametre olarak bir koşul alan özel bir kurucu sağlar. Koşul true olursa, ikinci parametre ile boost::optional türünde bir nesne başlatılır.
+Koşul yanlışsa, boost::optional türünde boş bir nesne oluşturulur.

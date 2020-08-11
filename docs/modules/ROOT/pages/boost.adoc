@@ -1,0 +1,174 @@
+= BOOST KÜTÜPHANESİ
+:toc:
+
+
+link#kaynak_kod
+
+=== Boost Kütüphanesi Kullanımı
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== Boost.DateTime
+Boost.DateTime kütüphanesi, takvim tarihleri ​​ve saatleri gibi zaman verilerini işlemek için kullanılabilir.
+
+Örneğin;
+[source code]
+----
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <iostream>
+
+int main()
+{
+    boost::gregorian::date d{2014, 1, 31};
+    std::cout << d.year() << '\n';
+    std::cout << d.month() << '\n';
+    std::cout << d.day() << '\n';
+    std::cout << d.day_of_week() << '\n';
+    std::cout << d.end_of_month() << '\n';
+}
+----
+
+d.year() : date veri tipindeki değikenin yılını verir.
+d.month() :date veri tipindeki değikenin ayını verir.
+d.day() : date veri tipindeki değikenin gününü sayısal olarak verir.
+d.day_of_week(): date veri tipindeki değikenin gününü string olarak verir.
+d.end_of_month(): date veri tipindeki değikeni yıl-ay-gün şeklinde verir.
+
+
+
+Örneğin;
+[source code]
+----
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <iostream>
+
+using namespace boost::posix_time;
+using namespace boost::gregorian;
+
+int main()
+{
+ptime pt{date{2014, 5, 12}, time_duration{12, 0, 0}};
+date d = pt.date();
+std::cout << d << '\n';
+time_duration td = pt.time_of_day();
+std::cout << td << '\n';
+}
+----
+
+date d = pt.date() : date tipindeki değişken ile tarihi tutar.
+
+pt.time_of_day() : saati tutar.
+
+
+
+Örneğin; Bölgeye bağlı zamanlar zaman dilimlerini de gösterebiliriz.
+
+[source code]
+----
+#include <boost/date_time/local_time/local_time.hpp>
+#include <iostream>
+
+using namespace boost::local_time;
+using namespace boost::posix_time;
+using namespace boost::gregorian;
+
+int main()
+{
+time_zone_ptr tz{new posix_time_zone{"CET+1"}};
+ptime pt{date{2014, 5, 12}, time_duration{12, 0, 0}};
+local_date_time dt{pt, tz};
+std::cout << dt.utc_time() << '\n';  ///2014-May-12 12:00:00
+std::cout << dt << '\n';             ///2014-May-12 13:00:00 CET
+std::cout << dt.local_time() << '\n';///2014-May-12 13:00:00
+std::cout << dt.zone_name() << '\n';///CET
+}
+----
+
+Örneğin;
+[source code]
+----
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <iostream>
+#include <locale>
+
+using namespace boost::gregorian;
+
+int main()
+{
+date d{2014, 5, 12};
+date_facet *df = new date_facet{"%A, %d %B %Y"};
+std::cout.imbue(std::locale{std::cout.getloc(), df});
+std::cout << d << '\n';
+}
+----   ////anlaşılmadı
+
+
+== Boost.Chrono
+Boost.Chrono kütüphanesi çeşitli saatler sağlar. Örneğin, geçerli saati alabilir veya bir işlemde geçen süreyi ölçebilirsiniz.
+
+Örneğin;
+[source code]
+----
+#include <boost/chrono.hpp>
+#include <iostream>
+
+using namespace boost::chrono;
+
+int main()
+{
+    std::cout << system_clock::now() << '\n';
+#ifdef BOOST_CHRONO_HAS_CLOCK_STEADY
+    std::cout << steady_clock::now() << '\n';
+#endif
+    std::cout << high_resolution_clock::now() << '\n';
+
+#ifdef BOOST_CHRONO_HAS_PROCESS_CLOCKS
+    std::cout << process_real_cpu_clock::now() << '\n';
+    std::cout << process_user_cpu_clock::now() << '\n';
+    std::cout << process_system_cpu_clock::now() << '\n';
+    std::cout << process_cpu_clock::now() << '\n';
+#endif
+
+#ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
+    std::cout << thread_clock::now() << '\n';
+#endif
+}
+----  hatalı çalıştı
+
+image::sunset.png
+
+
+
+
+
+
+
+
+

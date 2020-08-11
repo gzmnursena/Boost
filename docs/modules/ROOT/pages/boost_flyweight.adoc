@@ -1,0 +1,44 @@
+== Boost.Flyweight
+
+Boost.Flyweight, aynı adı taşıyan tasarım desenini kullanmayı kolaylaştıran bir kütüphanedir. Boost.Flyweight, birçok nesne veri paylaştığında hafızadan tasarruf etmenize yardımcı olur. Bu tasarım deseni ile, aynı verileri nesnelerde birden çok kez depolamak yerine, paylaşılan veriler yalnızca tek bir yerde tutulur ve tüm nesneler bu verilere başvurur. Bu tasarım desenini örneğin işaretçiler ile uygulayabiliriz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/flyweight.hpp>
+#include <string>
+#include <vector>
+#include <utility>
+
+using namespace boost::flyweights;
+
+struct person//person adında struct oluşturuldu, personel içerisinde id ve sehir bilgileri tutulacak
+{
+    int id_;
+    flyweight<std::string> city_;
+    flyweight<std::string> country_;
+    person(int id, std::string city, std::string country)
+            : id_{id}, city_{std::move(city)}, country_{std::move(country)} {}
+};
+
+int main()
+{
+    std::vector<person> persons;//person struct'ından persons nesnesi oluşturuldu
+    for (int i = 0; i < 100000; ++i)
+        persons.push_back({i, "Berlin", "Germany"});//persons vektorüne aratan id'leri,şehri ve ulkeyi ekler eklendi.
+}
+/*örnekte boost::flyweights::flyweight sınıfını kullanılır.
+city_ ve country_ değişkenleri std::string yerine flyweight<std::string>  türünü kullanır.
+Tasarım desenini kullanmak ve programın bellek gereksinimlerini azaltmak için bu şekilde kullanılmıştır.*/
+----
+
+
+Ekran Çıktısı:
+
+ Process finished with exit code 0
+
+
+Boost.Flyweight kütüphanesini kullanmak için, Örnekteki gibi boost/flyweight.hpp satırını ekleyin. Boost.Flyweight, yalnızca ayrıntılı kitaplık ayarlarını değiştirmeniz gerektiğinde eklenmesi gereken ek başlıklar sağlar.
+
+Tüm sınıflar ve fonksiyonlar boost::flyweights ad alanındadır. Örnekte sadece bu kütüphanedeki en önemli sınıf olan boost::flyweights::flyweight sınıfını kullanır. City_  değişkeni std::string yerine flyweight<std::string>  türünü kullanır. Tasarım desenini kullanmak ve programın bellek gereksinimlerini azaltmak için bu şekilde kullanılmıştır.

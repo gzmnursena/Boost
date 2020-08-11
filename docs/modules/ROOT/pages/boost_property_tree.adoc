@@ -1,0 +1,115 @@
+== Boost.PropertyTree
+
+boost::property_tree::ptree sınıfıyla Boost.PropertyTree, key/value çiftlerini saklamak için bir ağaç yapısı sağlar. Ağaç yapısı, bir gövdenin çok sayıda dal içeren çok sayıda dalla var olduğu anlamına gelir. Dosya sistemi, ağaç yapısına iyi bir örnektir. Dosya sistemleri, alt dizinleri olan bir alt dizine sahiptir.
+
+boost::property_tree::ptree kullanmak için boost/property_tree/ptree.hpp başlık dosyasını ekleyin. Bu bir ana başlık dosyasıdır, bu nedenle Boost.PropertyTree için başka başlık dosyalarının eklenmesine gerek yoktur.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/property_tree/ptree.hpp>
+#include <iostream>
+
+using boost::property_tree::ptree;
+
+int main()
+{
+    ptree pt;
+    pt.put("C:.Windows.System", "20 files");//put() fonksiyonu bir dizinin yolunu saklar
+    /*put() fonksiyonundan sonra, saklanan “20 files” değerini okumak ve standart çıktıya yazmak için
+     ptree tipindeki pt değişkenine erişilir.*/
+
+    ptree &c = pt.get_child("C:");
+    //get_child() fonksiyonu alt dallamaya erişmek için kullanılır.
+    ptree &windows = c.get_child("Windows");
+    ptree &system = windows.get_child("System");
+    //get_child() fonksiyonuna yapılan üçüncü çağrı, System dizinini temsil eden boost::property_tree::ptree öğesini alır.
+    std::cout << system.get_value<std::string>() << '\n';
+    //put() fonksiyonu ile örneğin başında depolanan değeri okumak için get_value() çağrılır.
+}
+----
+
+
+Ekran Çıktısı:
+
+ 20 files
+
+Örnekte, bir dizinin yolunu saklamak için boost::property_tree::ptree'yi kullanır. Bu put() fonksiyonu ile yapılır. boost::property_tree::ptree key/value çiftlerini kaydeden bir ağaç yapısı olduğundan bu fonksiyon iki parametre bekler. Ağaç sadece dal ve dallardan ibaret değildir, her dal ve dal için bir değer atanmalıdır. 
+
+Put() fonksiyonuna iletilen ilk parametre bir dizine giden yoldur. Ancak, Windows'taki ortak yol ayırıcı olan boşluk kullanılmaz. Nokta kullanır.
+
+
+Put() fonksiyonundan sonra, saklanan “20 files” değerini okumak ve standart çıktıya yazmak için ptree tipindeki pt değişkenine erişilir. Bu, daldan şubeye veya dizinden dizine atlayarak yapılır.
+
+Bir alt dallamaya erişmek için aynı türdeki bir nesneye başvuru döndüren get_child() fonksiyonunu çağırırsınız. Örnekte bu, boost::property_tree::ptree için bir referanstır. Her dalın alt dalları olabileceğinden ve üst ve alt dallar arasında yapısal bir fark olmadığı için aynı tip kullanılır.
+
+get_child() fonksiyonuna yapılan üçüncü çağrı, System dizinini temsil eden boost::property_tree::ptree öğesini alır. put() fonksiyonu örneğin başında depolanan değeri okumak için get_value() çağrılır.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/property_tree/ptree.hpp>
+#include <utility>
+#include <iostream>
+
+using boost::property_tree::ptree;
+
+int main()
+{
+    ptree pt;
+    pt.put("C:.Windows.System", "20 files");//put() fonksiyonu bir dizinin yolunu saklar
+
+    boost::optional<std::string> c = pt.get_optional<std::string>("C:");
+    //get_optional() fonksiyonu düğüm değerini okumak için kullanılır
+    std::cout << std::boolalpha << c.is_initialized() << '\n';
+    // is_initialized() ile sonuc true-false döndürülür
+
+    pt.put_child("D:.Program Files", ptree{"50 files"});
+    pt.add_child("D:.Program Files", ptree{"60 files"});
+
+    /*put_child() ve add_child(), put() ile aynı işlemi yapıyor gibi görünebilir.
+     Farkları put_child() ve add_child() tüm alt ağacı eklerken put() sadece bir key/value çifti oluşturur.
+    put_child() ve add_child() fonksiyonları arasındaki fark,
+     put_child() 'in varolan düğüme erişmesidir,
+     add_child() ise her zaman ağaca yeni bir düğüm ekler.*/
+
+    ptree d = pt.get_child("D:");
+    //get_child() fonksiyonu alt dallamaya erişmek için kullanılır.
+
+    for (const std::pair<std::string, ptree> &p : d)//ptree  nesnelere doğrudan erişmez.
+    // Bunun yerine std::pair std::string, ptree türündeki öğeler üzerinde gezer. Ilk olarak geçerli dalın anahtarını içerir.
+    {
+        std::cout << p.second.get_value<std::string>() << '\n';
+        //put() fonksiyonu ile örneğin başında depolanan değeri okumak için get_value() çağrılır.s
+    }
+
+
+    boost::optional<ptree&> e = pt.get_child_optional("E:");//get_child_optional() fonksiyonu get_child() gibi kullanılır.
+    //get_child_optional() boost::optional türünde bir nesne döndürür.
+    std::cout << e.is_initialized() << '\n';//is_initialized() fonksiyonu ile sonuc true-false döndürülür
+}
+----
+
+Ekran Çıktısı:
+
+ true
+ 50 files
+ 60 files
+ false
+
+
+
+Bir düğüm değerini okumak istiyorsanız, get_optional() fonksiyonunu çağırabilirsiniz, ancak düğümün var olup olmadığından emin değilsiniz. get_optional(), boost::optionalı türündeki bir nesnedeki değeri döndürür. Düğüm bulunmazsa nesne boştur. Aksi takdirde, get_optional() get() fonksiyonu ile aynı şekilde çalışır.
+
+put_child() ve add_child(), put() ile aynı işlemi yapıyor gibi görünebilir. Farkları put_child() ve add_child() tüm alt ağacı eklerken put() sadece bir key/value çifti oluşturur. boost::property_tree::ptree türündeki bir nesnenin put_child() ve add_child() fonksiyonlarının ikinci parametresi olarak iletildiğini unutmayın.
+
+Put_child() ve add_child() fonksiyonları arasındaki fark, put_child() 'in varolan bir düğüme erişmesidir, add_child() ise her zaman ağaca yeni bir düğüm ekler. Bu nedenle yukarıdaki örnekteki ağacın “D: .Program Dosyaları” adlı iki düğümü vardır. Kullanım durumuna bağlı olarak, bu kafa karıştırıcı olabilir. Bir ağaç bir dosya sistemini temsil ediyorsa, iki özdeş yol olmamalıdır. Bir ağaçta kopya istemiyorsanız, aynı düğümleri eklemekten kaçınmalısınız.
+
+Örnekte, for döngüsünde “D:” altındaki tuşların değerini gösterir. Örnek, standart çıktıya "50 dosya" ve "60 dosya" yazar ve bu da “D: .Program Dosyaları” adı verilen iki özdeş düğüm olduğunu kanıtlar.
+
+Örnekte tanıtılan son fonksiyon get_child_optional() fonksiyonudur. Bu fonksiyon get_child() gibi kullanılır. get_child_optional(), boost::optional türünde bir nesne döndürür. Bir düğümün mevcut olup olmadığından emin değilseniz boost::optional olarak adlandırırsınız.
+

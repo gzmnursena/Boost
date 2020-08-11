@@ -1,0 +1,6 @@
+== Boost.Log
+
+Boost.Log, Boost'taki günlük kütüphanesidir. Çeşitli biçimlerde veri giriş sayısız arka uçlarını destekler. Arka uçlara, hizmetleri paketleyen ve günlük girdilerini farklı şekillerde ileten ön uçlardan erişilir. Örneğin, günlük girdilerini zaman uyumsuz olarak iletmek için bir thread kullanan bir ön uç yoktur. Ön uçların belirli günlük girişlerini yok saymak için filtreleri olabilir. Ve günlük girişlerinin dizeler olarak nasıl biçimlendirildiğini tanımlarlar. Tüm bu işlevler genişletilebilir, bu da artışı sağlar.
+
+
+

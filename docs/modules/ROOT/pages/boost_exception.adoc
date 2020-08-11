@@ -1,0 +1,196 @@
+== Boost.Exception
+
+Boost.Exception kütüphanesi, bir istisnayı atıldıktan sonra veri eklemenizi sağlayan yeni bir istisna türü, boost::exception sağlar. Bu tür, boost/exception/exception.hpp dosyasında tanımlanır. Boost.Exception sınıflarını ve fonksiyonları birden çok başlık dosyası üzerine yaydığından, aşağıdaki örnekler başlık dosyalarını tek tek eklemekten kaçınmak için ana başlık dosyası boost/exception/all.hpp dosyasına erişir.
+
+Boost.Exception, C + + 11 standardından bir istisnayı bir iş parçacığından diğerine aktaran mekanizmayı destekler. Boost::exception_ptr, std::exception_ptr ile benzerdir. Ancak, Boost.Exception standart kitaplıktaki üstbilgi dosyası istisnasının tam yerini almaz. Örneğin, Boost.Exception, std::nested_exception türündeki iç içe kural dışı durumlar için destek eksiktir.
+
+[IMPORTANT]
+====
+Bu bölümdeki örnekleri Visual C ++ 2013 ile derlemek için noexcept anahtar sözcüğünü kaldırın. Microsoft derleyicisinin bu sürümü henüz istisnayı desteklemiyor.
+====
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/exception/all.hpp>
+#include <exception>
+#include <new>
+#include <string>
+#include <algorithm>
+#include <limits>
+#include <iostream>
+
+typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info;
+
+struct allocation_failed : public boost::exception, public std::exception
+{
+    const char *what() const noexcept { return "allocation failed"; }
+};
+
+char *allocate_memory(std::size_t size)//bellekte dinamik yer ayırır.
+{
+    char *c = new (std::nothrow) char[size];//std::nothrow komutunu new komutu ile yer alır ve dönüş değerinin 0 olup olmadığını kontrol eder.
+    // Bellek ayırma başarısız olursa, allocation_failed şeklinde bir istisna atılır
+    if (!c)
+        throw allocation_failed{};//allocation_failed, yeni bellek ayıramadığında varsayılan olarak atılan std::bad_alloc ile kural dışı durumunun yerini alır.
+    return c;
+}
+
+char *write_lots_of_zeros()//bu fonksiyon, allocate_memory() fonksiyonunu çağırır.
+//write_lots_of_zeros(), mümkün olan en büyük boyuta sahip bir bellek bloğunu ayırmayı denemek için allocate_memory() fonksiyonunu çağırır.
+{
+    try
+    {
+        char *c = allocate_memory(std::numeric_limits<std::size_t>::max());//allocate_memory() fonksiyonu bellekte dinamik yer ayırır.
+        std::fill_n(c, std::numeric_limits<std::size_t>::max(), 0);
+        return c;
+    }
+    catch (boost::exception &e)
+    {
+        e << errmsg_info{"writing lots of zeros failed"};//boost::exception ile hataya düşer
+        throw;
+    }
+}
+
+int main()
+{
+    try
+    {
+        char *c = write_lots_of_zeros();//write_lots_of_zeros() fonksiyonu çağırılır
+        delete[] c;
+    }
+    catch (boost::exception &e)
+    {
+        std::cerr << boost::diagnostic_information(e);//fonksiyonda hata oluşursa  boost::diagnostic_information(), standart hataya yazılabilen std::string türünde bir sonuc döndürür..
+    }
+}
+----
+
+
+Ekran Çıktısı:
+
+ Throw location unknown (consider using BOOST_THROW_EXCEPTION)
+ Dynamic exception type: allocation_failed
+ std::exception::what: allocation failed
+ [tag_errmsg*] = writing lots of zeros failed
+
+
+write_lots_of_zeros(), mümkün olan en büyük boyuta sahip bir bellek bloğunu ayırmayı denemek için allocate_memory() fonksiyonunu çağırır.
+allocate_memory() belleği dinamik olarak ayırır. std::nothrow işlevi için new komutu oluşturulur ve dönüş değeri 0 olup olmadığını denetler. Bellek ayırma başarısız olursa, bir özel durum türü allocation_failed oluşturulur. allocation_failed özel durum değiştirir Std::bad_alloc yeni bellek ayırmak başarısız olursa varsayılan olarak oluşturulur.
+
+wrıte_lots_of_zeros(), mümkün olan en büyük boyutta bir bellek bloğu ayırmaya çalışmak için allocate_memory() çağırır. Bu std::numeric_limits gelen max() yardımıyla yapılır. Örnek, tahsisatın başarısız olması için bu kadar bellek ayırmaya çalışır.
+
+allocation_failed boost::exception ve std::exception türetilmiştir. Std::exception sınıfından türetilmesi gerekli değildir. allocation_failed, varolan bir çerçeveye gömmek için farklı bir sınıf hiyerarşisinden bir sınıftan da türetilmiş olabilir. Örnekte, standart tarafından tanımlanan sınıf hiyerarşisini kullanırken, yalnızca Boost::exception öğesinden allocation_failed türetilmesi yeterli olacaktır.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/exception/all.hpp>
+#include <exception>
+#include <new>
+#include <string>
+#include <algorithm>
+#include <limits>
+#include <iostream>
+
+typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info;
+
+struct allocation_failed : public std::exception
+{
+    const char *what() const noexcept { return "allocation failed"; }
+};
+
+char *allocate_memory(std::size_t size)//bellekte dinamik yer ayırır.
+{
+    char *c = new (std::nothrow) char[size];;//std::nothrow komutunu new komutu ile yer alır ve dönüş değerinin 0 olup olmadığını kontrol eder.
+    // Bellek ayırma başarısız olursa, allocation_failed şeklinde bir istisna atılır
+    if (!c)
+        BOOST_THROW_EXCEPTION(allocation_failed{});
+    return c;
+}
+
+char *write_lots_of_zeros()//bu fonksiyon, allocate_memory() fonksiyonunu çağırır.
+//write_lots_of_zeros(), mümkün olan en büyük boyuta sahip bir bellek bloğunu ayırmayı denemek için allocate_memory() fonksiyonunu çağırır.
+{
+    try
+    {
+        char *c = allocate_memory(std::numeric_limits<std::size_t>::max());//allocate_memory() fonksiyonu bellekte dinamik yer ayırır.
+        std::fill_n(c, std::numeric_limits<std::size_t>::max(), 0);
+        return c;
+    }
+    catch (boost::exception &e)
+    {
+        e << errmsg_info{"writing lots of zeros failed"};//boost::exception ile hataya düşer
+        throw;
+    }
+}
+
+int main()
+{
+    try
+    {
+        char *c = write_lots_of_zeros();//write_lots_of_zeros() fonksiyonu çağırılır
+        delete[] c;
+    }
+    catch (boost::exception &e)
+    {
+        std::cerr << *boost::get_error_info<errmsg_info>(e);
+
+        /*doğrudan errmsg_info türünde hata iletisine erişmek için boost::get_error_info() kullanır.
+   boost::get_error_info() boost::shared_ptr türünde bir akıllı işaretçi döndürdüğünden, operator * hata iletisini
+   almak için kullanılır. Boost::get_error_info() için geçirilen parametre boost::exception türünde değilse,
+   null bir işaretçi döndürülür.boost_throw_exception her zaman bir özel durum oluşturmak için kullanılırsa,
+   özel durum her zaman boost::exception türetilir-bu durumda null için döndürülen akıllı işaretçiyi
+   denetlemeye gerek yoktur.*/
+    }
+}
+----
+
+
+Ekran Çıktısı:
+
+ writing lots of zeros failed
+
+
+Yukarıdaki örnekte boost::diagnostic_information() kullanılmaz, doğrudan errmsg_info türünde hata iletisine erişmek için boost::get_error_info() kullanır. Boost::get_error_info() boost::shared_ptr türünde bir akıllı işaretçi döndürdüğünden, operator * hata iletisini almak için kullanılır. Boost::get_error_info() için geçirilen parametre boost::exception türünde değilse, null bir işaretçi döndürülür. boost_throw_exception her zaman bir özel durum oluşturmak için kullanılırsa, özel durum her zaman boost::exception türetilir-bu durumda null için döndürülen akıllı işaretçiyi denetlemeye gerek yoktur.
+
+
+Kodların doğru bir şekilde çalışması için CMakeLists.txt dosyası aşağıdaki gibi düzenlenmelidir.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(sample2)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/asli/Downloads/boost_1_71_0/")
+
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+find_package(Boost 1.71.0
+        REQUIRED date_time filesystem system iostreams exception unit_test_framework
+        ${BOOST_PYTHON})
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample2 main.cpp)
+
+target_link_libraries(sample2  ${Boost_LIBRARIES})
+----
+
+ 

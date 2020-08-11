@@ -1,0 +1,70 @@
+== Boost.Unordered
+
+Boost.Unordered , boost::unordered_set , boost::unordered_multiset , boost::unordered_map ve
+boost::unordered_multimap sınıflarını sağlar. 
+Bu sınıflar, C++ 11 ile standart kütüphaneye eklenen
+karma containers ile aynıdır.
+
+Örneğin; boost::unordered_set
+
+[source code]
+----
+#include <boost/unordered_set.hpp>
+#include <string>
+#include <iostream>
+
+using  namespace std;
+
+int main()
+{
+    typedef boost::unordered_set<string> unordered_set;
+    unordered_set set;
+
+    set.emplace("cat");
+    set.emplace("shark");
+    set.emplace("spider");// unordered_set 'e cat,shark,spider eklendi.
+
+    for (const string &s : set)
+        cout << s <<endl;  // foreach dongusu ile ekrana unordered_set yazdirildi
+
+    cout << set.size() << endl;
+    cout << set.max_size() << endl; // unordered_set 'in boyutu ve max boyutu ekrana yazdirildi.
+
+    cout << boolalpha << (set.find("cat") != set.end()) << endl; //set'in icerisinde 'cat' var mi??
+    cout << set.count("shark") << endl; //set'in icerisinde shark sayisini ekrana yazdirdi
+    cout << set.count("a") << endl;
+}
+----
+
+
+Örneğin; boost::unordered_map
+[source code]
+----
+#include <boost/unordered_map.hpp>
+#include <string>
+#include <iostream>
+
+using  namespace std;
+
+int main()
+{
+  typedef boost::unordered_map<string, int> unordered_map;
+  unordered_map map;
+
+  map.emplace("cat", 4);
+  map.emplace("shark", 0);
+  map.emplace("spider", 8);// unordered_map 'e cat,shark,spider eklendi.
+
+  for (const auto &p : map)
+    cout << p.first << ";" << p.second << endl;// foreach dongusu ile ekrana unordered_map 'in ilk ve ikinci degerleri yazdirildi
+
+  cout << map.size() << endl;
+  cout << map.max_size() << endl;// unordered_map 'in boyutu ve max boyutu ekrana yazdirildi.
+
+  cout << boolalpha << (map.find("cat") != map.end()) << endl;//map'in icerisinde 'cat' var mi??
+  cout << map.count("shark") << endl;//map'in icerisinde shark sayisini ekrana yazdirdi
+}
+----
+
+Örnekte birkaç hayvanın adlarını ve bacak sayısını saklamak için boost::unordered_map kullanır. Bir kez daha, boost::unordered_map yerine std::unordered_map kullanılabilir.
+

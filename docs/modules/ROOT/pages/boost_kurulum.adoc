@@ -1,0 +1,211 @@
+== Boost Kütüphanesi Kurulumu
+
+Boost Kütüphanesi kurulumu farklı şekillerde yapılabilir. 
+
+1-Paket yöneticisinden derlenmiş halini doğrudan yüklemek 
+
+2- Kaynak kodları derleyerek boost yüklemek 
+
+3- Kaynak paketlerini yüklemek
+
+
+
+Stabil sürümünü isterseniz paket yöneticisinden yükleyebilirsiniz fakat en
+güncel boost sürümünü kullanmak istiyorsanız boost kütüphanesinin kaynak kodlarını
+indirip kurmanız gerekmektedir. 
+
+
+
+https://www.boost.org/users/download/
+
+
+== 1- Paket Yöneticisinden BOOST Kurulumu
+
+-- Linux işletim sisteminde; terminal’i açarak aşağıdaki kodları ekleyiniz.
+
+
+[source, bash]
+----
+sudo apt install libboost-dev
+sudo apt install libboost-all-dev
+----
+
+
+-- Yüklü Boost Sürümünü Doğrulayın
+
+Ubuntu sunucunuzdaki Boost kurulum işlemini tamamladıktan sonra, Boost'un doğru kurulduğunu kontrol etmek için kurulu boost versiyonunu doğrulayabilirsiniz. Sürümünü kontrol etmek için aşağıdaki komutlardan birini yazın:
+
+//image::images/3.png[]
+
+En güncel sürüm 1.71 olmasına rağmen paket yöneticisinden yüklenen sürüm 1.58 olmuştur.
+
+[source, bash]
+----
+dpkg -s libboost-dev | grep Version
+----
+
+veya
+
+//image::images/4.png[]
+
+[source, bash]
+----
+cat /usr/include/boost/version.hpp | grep "BOOST_LIB_VERSION"
+----
+
+Outputs: 
+
+image::images/3-version1.png[]
+
+veya 
+
+image::images/3-version2.png[]
+
+şeklinde olur.
+
+== 2- Boost C ++ Kütüphanelerini PPA'dan Yükleyin
+
+-- Ayrıca Boost'u Ubuntu Linux'ta bir PPA'dan yükleyebilirsiniz, sadece aşağıdaki komutu yazmanız yeterlidir:
+
+//image::images/6-Install.png[]
+
+[source,xml]
+----
+$ sudo add-apt-repository ppa:mhier/libboost-latest
+$ sudo apt update
+----
+
+Ubuntu 18.04 için:
+
+[source, xml]
+----
+deb http://ppa.launchpad.net/mhier/libboost-latest/ubuntu bionic main
+deb-src http://ppa.launchpad.net/mhier/libboost-latest/ubuntu bionic main
+----
+
+Ubuntu 16.04 için:
+
+
+[source, xml]
+----
+deb http://ppa.launchpad.net/mhier/libboost-latest/ubuntu xenial main
+deb-src http://ppa.launchpad.net/mhier/libboost-latest/ubuntu xenial main
+----
+
+--  Ardından, Boost'u Ubuntu Linux'unuza yüklemeyi deneyebilirsiniz ve bu PPA'nın 1.58 sürümünü, kurmak için aşağıdaki komutu yazın:
+
+
+[source, bash]
+----
+sudo apt install libboost
+----
+
+Ardından, 1.58 sürümü Ubuntu Linux sunucunuza yüklenir.
+
+
+== 3- Boost C ++ Kütüphanelerini Kaynak Paketleri Yükleme
+
+
+Ubuntu sunucunuza en yeni Boost sürümünü (geçerli sürüm 1.71 ise) yüklemek istiyorsanız, onu kaynak paketinden yüklemeniz gerekir. Ayrıca, en son arşiv destek paketini önce resmi sitesinden indirmeniz gerekir.  Daha sonra kurulum adımlarını izleyin. 
+
+https://www.boost.org
+
+linkten boost'un en son sürümünü indirin.
+
+
+-- Tüm dosyaları yukarıdaki adımda indirdiğiniz arşiv dosyasından çıkarın. Bunun için terminale aşağıdaki komut satırını yazın.
+
+//image::images/16.png[]
+
+//$ tar --bzip2 -xf boost_1_71_0.tar.bz2
+
+[source, bash]
+----
+tar -zxvf boost_1_71_0.tar.gz
+----
+
+-- Daha önceden oluşturduğunuz bir program üzerinden boots'un çalışıp çalışmadığını kontrol edebiliriz.
+Program üzerinde değişiklik yapmak için aşağıdaki komut satırını terminale yazın.
+
+//image::images/17.png[]
+
+[source, bash]
+----
+nano example.cpp
+----
+
+-- Ardından boost kütüphanesini programda çalıştırmak için terminale aşağıdaki komut satırını yazın.
+
+//image::images/18.png[]
+
+//image::images/19.png[]
+
+[source, bash]
+----
+c++ -I path/to/boost_1_71_0 example.cpp -o example
+----
+
+[source, bash]
+----
+c++ -I ~/Downloads/boost_1_71_0 example.cpp -o example
+----
+
+-- Klasörün içerisindelki dosyaları görmek için aşağıdaki komut satırını yazın.
+
+//image::images/20.png[]
+
+[source, bash]
+----
+ls
+----
+
+
+-- Daha sonra programı çalıştırın.
+
+//image::images/21.png[]
+
+[source, bash]
+----
+./example
+----
+
+Burada program çalışmayıp hata verecektir. Hatayı düzeltmek için boost'un kaynak paketlerini yüklemek gerekir.
+
+-- İndirilen klasörde geçerli dizini boost_1_71_0 / olarak değiştirin, şunu yazın:
+
+//image::images/22.png[]
+
+[source, bash]
+----
+cd boost_1_71_0/
+----
+
+-- Ardından komut satırına şu komutu yazın.
+
+//image::images/23.png[]
+
+[source, bash]
+----
+./bootstrap.sh
+----
+
+Outputs:
+
+image::images/23.1.png[]
+
+
+-- Aşağıdaki komut ile Boost kütüphanesinin 1.71 sürümü kurulur.
+
+//image::images/24.png[]
+[source, bash]
+----
+./b2
+----
+
+Outputs:
+
+image::images/24.1.png[]
+
+...
+
+

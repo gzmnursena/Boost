@@ -1,0 +1,117 @@
+== Boost.Parameter
+
+Boost.Parameter parametreleri  key/value çiftleri olarak geçirmeyi mümkün kılar. Kitaplık fonksiyon parametrelerini desteklemenin yanı sıra şablon parametrelerini de destekler. Boost.Parameter özellikle uzun parametre listeleri kullanıyorsanız ve parametrelerin sırasını ve anlamını hatırlamak zordur. Key/value çiftleri, parametreleri herhangi bir sırayla geçirmeyi mümkün kılar. Her değer bir anahtarla iletildiğinden, çeşitli değerlerin anlamı da daha açıktır.
+
+Örneğin;
+
+[soource,c++]
+----
+#include <boost/parameter.hpp>
+#include <string>
+#include <iostream>
+#include <ios>
+
+BOOST_PARAMETER_NAME(a)
+BOOST_PARAMETER_NAME(b)
+BOOST_PARAMETER_NAME(c)
+BOOST_PARAMETER_NAME(d)
+BOOST_PARAMETER_NAME(e)//BOOST_PARAMETER_FUNCTION'ın parametrelerine isim verilir.
+
+
+//beş parametre bekleyen karmaşık bir fonksiyon() tanımlanır. Parametreler herhangi bir sırayla geçirilebilir.
+// Boost.Parameter, böyle bir işlevi tanımlamak için BOOST_PARAMETER_FUNCTION kullanır
+BOOST_PARAMETER_FUNCTION(
+(void),
+complicated,
+tag,
+(required
+(a, (int))
+(b, (char))
+(c, (double))
+(d, (std::string))
+(e, *)
+)
+)
+{
+std::cout.setf(std::ios::boolalpha);//boolean değişkenlerinin sonucunu 0-1 olarak değilde true-false olarak dondurur
+std::cout << a << '\n';
+std::cout << b << '\n';
+std::cout << c << '\n';
+std::cout << d << '\n';
+std::cout << e << '\n';
+}
+
+int main()
+{
+    complicated(_c = 3.14, _a = 1, _d = "Boost", _b = 'B', _e = true);//BOOST_PARAMETER_FUNCTION tipindeki
+    //complicated fonksiyonuna elemanlar gonderilir.
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ B
+ 3.14
+ Boost
+ true
+ 
+ 
+BOOST_PARAMETER_FUNCTION ayrıca isteğe bağlı parametrelerin tanımlanmasını da destekler. Aşağıda örnek isteğe bağlı parametreler kullanılarak yapılmıştır.
+ 
+Örneğin;
+
+[source,c++]
+----
+#include <boost/parameter.hpp>
+#include <string>
+#include <iostream>
+#include <ios>
+
+BOOST_PARAMETER_NAME(a)
+BOOST_PARAMETER_NAME(b)
+BOOST_PARAMETER_NAME(c)
+BOOST_PARAMETER_NAME(d)
+BOOST_PARAMETER_NAME(e)//BOOST_PARAMETER_FUNCTION'ın parametrelerine isim verilir.
+
+
+//beş parametre bekleyen karmaşık bir fonksiyon() tanımlanır. Parametreler herhangi bir sırayla geçirilebilir.
+// Boost.Parameter, böyle bir işlevi tanımlamak için BOOST_PARAMETER_FUNCTION kullanır
+
+BOOST_PARAMETER_FUNCTION(
+  (void),
+  complicated,
+  tag,
+  (required
+    (a, (int))
+    (b, (char)))
+  (optional
+    (c, (double), 3.14)
+    (d, (std::string), "Boost")
+    (e, *, true))
+)
+{
+  std::cout.setf(std::ios::boolalpha);//boolean değişkenlerinin sonucunu 0-1 olarak değilde true-false olarak dondurur
+  std::cout << a << '\n';
+  std::cout << b << '\n';
+  std::cout << c << '\n';
+  std::cout << d << '\n';
+  std::cout << e << '\n';
+}
+
+int main()
+{
+  complicated(_b = 'B', _a = 1);//BOOST_PARAMETER_FUNCTION tipindeki
+    //complicated fonksiyonuna parametreler gönderilir.
+    // c, d ve e parametreleri isteğe bağlıdır. Bu parametreler, BOOST_PARAMETER_FUNCTION içinde isteğe bağlı anahtar kelime kullanılarak tanımlanır.
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ B
+ 3.14
+ Boost
+ true
+ 

@@ -1,0 +1,420 @@
+== Boost.StringAlgorithms
+
+== to_upper_copy(s)
+Metnin tamamını büyük harflerle yazar.
+
+== to_lower_copy(s)
+Metnin tamamını küçük harflerle yazar.
+
+== Örneğin;
+
+[source,c++]
+----
+
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+int main() {
+    string metin="Boost C++ Libraries";
+    cout<< metin <<endl;
+    cout << to_upper_copy(metin) << endl; // metnin içerisindeki tüm harfleri büyük harf olarak yazar.
+    cout << to_lower_copy(metin) << endl; // metnin içerisindeki tüm harfleri küçük harf olarak yazar.
+    return 0;
+}
+----
+
+Ekran Çıktısı:
+
+ Boost C++ Libraries
+ BOOST C++ LIBRARIES
+ boost c++ libraries
+
+== erase_first_copy(s)
+Metinde baştan, sondan vs. kopyalama yapar.
+
+Örneğin;
+
+[source,c++]
+----
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <string>
+
+using namespace boost::algorithm; // metotları kullanmamızı sağlar.
+using namespace std;
+
+int main() {
+
+    //erase_ ... bir dizeden tek tek karakterleri silmek için kullanılır.
+    string metin = "Boost C++ Libraries";
+    cout << erase_first_copy(metin, "s") << endl<<endl;//metinden 2.parametrenin('s') ilk geçtiği yeri siler
+
+    cout << erase_nth_copy(metin, "s", 0) << endl;//metinde 2.parametreyi('s') bulur ve 3. parametre kadar karakterleri siler
+    cout << erase_nth_copy(metin, "s", 1) << endl;
+    cout << erase_nth_copy(metin, "s", 2) << endl<< endl;
+
+    cout << erase_last_copy(metin, "s") << endl<< endl;//metinden 2.parametrenin('s') son geçtiği yeri siler
+    cout << erase_all_copy(metin, "s") << endl<< endl;//metinde 2.parametrenin geçtiği tüm karakterleri siler.
+    cout << erase_head_copy(metin, 5) << endl<< endl;// metnin ilk 5 karakterini siler
+    cout << erase_tail_copy(metin, 9) << endl<< endl;//metnin son 9 karakterini siler
+    return 0;
+}
+----
+
+Ekran Çıktısı:
+
+ Boot C++ Libraries
+ Boot C++ Libraries
+ Boost C++ Librarie
+ Boost C++ Libraries
+ Boost C++ Librarie
+ Boot C++ Librarie
+ C++ Libraries
+ Boost C++
+
+*erase_first_copy(metin,"a"):* Metnin içerisinde ikinci parametrede verilen değerin ilk geçtiği yeri siler.
+
+*erase_nth_copy(metin,"a", 1):* Metnin içerisinde ikinci parametrede verilen değerin üçüncü parametredeki geçtiği yeri siler.
+
+*erase_last_copy(metin,"a"):* Metnin içerisinde ikinci parametrede verilen değerin son geçtiği yeri siler.
+
+*erase_all_copy(metin, "a"):* Metnin içerisinde ikinci parametrede verilen değerin geçtiği yerleri siler.
+
+*erase_head_copy(metin, 5):* Metnin ilk 5 karakterini siler.
+
+*erase_head_copy(metin, 5):* Metnin son 9 karakterini siler.
+
+== find_first(metin, varmi);
+
+Metnin içerisinde ikinci parametredeki değer var ise ekrana yazdırır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace boost::iterator_range_detail;
+using namespace std;
+
+int main() {
+    //find_first() metodu 1.parametre içerisinde 2. parametre var mı diye aratır.
+    // Varsa aratılan değeri yazar. Yoksa boşluk döndürür.
+    string metin = "Boost C++ Libraries";
+    boost::iterator_range<std::string::iterator> varmi;//iterator_range tipinde boolean değişken
+    varmi= find_first(metin, "Lib"); //metnin içerisinde 'Lib' ifadesini arar
+    cout << varmi << endl; // varsa 'Lib' yazar, yoksa boşluk döndürür
+    varmi= find_first(metin, "C#"); //metnin içerisinde 'C#' ifadesini arar
+    cout << varmi << endl;// varsa 'C#' yazar, yoksa boşluk döndürür
+    varmi= find_first(metin, "C++"); //metnin içerisinde 'C++' ifadesini arar
+    cout << varmi << endl;// varsa 'C++' yazar, yoksa boşluk döndürür
+    return 0;
+}
+----
+
+Ekran Çıktısı:
+
+ Lib
+ C++
+
+== join(s, " ")
+Vektördeki elemanları ikinci parametreye göre birleştirir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <vector>
+
+using namespace std;
+using namespace boost::algorithm;
+
+int main() {
+    // join() metodu vektor elemanlarının arasına eleman eklemek için kullanılır.
+    vector<string> metin{"Boost", "C++", "Libraries"};
+    cout<< join(metin,"  ")<< endl;//herbir elemandan sonra boşluk ekler
+    cout<< join(metin,"/")<< endl;//herbir elemandan sonra / ekler
+    return 0;
+}
+----
+
+Ekran Çıktısı:
+
+ Boost  C++  Libraries
+ Boost/C++/Libraries
+
+
+== replace(a,b)
+a ile b yi gerekli formatta değiştirir.
+
+*replace_first_copy(metin," + "," - ");* Metnin içerisinde ilk bulunan + yı - olarak değiştirir.
+
+*replace_last_copy(metin," + "," - ");* Metnin içerisinde son bulunan + yı - olarak değiştirir.
+
+*replace_all_copy(metin," + "," - ");*  Metnin içerisindeki + ların tamamını - olarak değiştirir.
+
+*replace_head_copy(metin,5, "BOOST");*  Metnin ilk 5 indisini 3. parametredeki değerle değiştirir.
+
+*replace_tail_copy(metin,9,"LIBRARIES");* Metnin 9. indisinden itibaren değerini 3. parametre ile değiştirir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+int main()
+{
+    // replace() metodu 3 parametre alır.Ilk parametrede verilen değişkende 2.parametreyi bulur ve 3.parametre ile (varsa) yer değiştirir.
+    string metin = "Boost C++ Libraries";
+    cout << replace_first_copy(metin, "+", "-") << endl;
+    //metinde '+' nın ilk bulunduğu yeri bulur ve '-' ile yer değiştirir.
+    cout << replace_last_copy(metin, "+", "-") << endl;
+    //metinde '+' nın son bulunduğu yeri bulur ve '-' ile yer değiştirir.
+    cout << replace_all_copy(metin, "+", "-") << endl;
+    //metinde '+' 'ları '-' ile yer değiştirir.
+    cout << replace_head_copy(metin, 5, "BOOST") << endl;
+    //metnin baştaki beş karakterini 2.parametre ile değiştirir.
+    cout << replace_tail_copy(metin, 9, "LIBRARIES") << endl;
+    // metnin son dokuz karakterini 2.parametre ile değiştirir.
+}
+----
+
+Ekran Çıktısı:
+
+ Boost C-+ Libraries
+ Boost C+- Libraries
+ Boost C-- Libraries
+ BOOST C++ Libraries
+ Boost C++ LIBRARIES
+ 
+
+== trim
+Boşlukları silme ile ilgili işlemleri yapar.
+
+*trim_left_copy(s):*  Metnin sol tarafındaki tüm boşlukları siler.
+
+*trim_right_copy(s):*  Metnin sağ tarafındaki tüm boşlukları siler.
+
+*trim_copy(s):*  Metnin sağ ve sol tarafındaki tüm boşlukları siler.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+int main()
+{
+    string metin = "   Boost C++ Libraries   ";
+    cout << "_" << trim_left_copy(metin) << "_"<< endl;//Metnin sol tarafındaki tüm boşlukları siler.
+    cout << "_" << trim_right_copy(metin) << "_"<< endl;//Metnin sağ tarafındaki tüm boşlukları siler.
+    cout << "_" << trim_copy(metin) << "_"<< endl;//Metnin sol ve sağ tarafındaki tüm boşlukları siler.
+    return  0;
+}
+----
+
+Ekran Çıktısı:
+
+ _Boost C++ Libraries   _
+ _   Boost C++ Libraries_
+ _Boost C++ Libraries_
+
+
+== is_any_of()
+
+*trim_left_copy_if(metin, is_any_of("-")) :* Metnin solundaki -'leri siler.
+
+*trim_right_copy_if(metin, is_any_of("-")) :* Metnin sağındaki -'leri siler.
+
+*trim_copy_if(metin, is_any_of("-")) :*  Metnin sağ ve sol tarafındaki tüm -'leri siler.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+int main() {
+    //is_any_of() metoduna parametre olarak iletilen belirli bir karakterin var olup olmadığını kontrol eder.
+    string metin = "--Boost C++ Libraries--";
+    cout << trim_left_copy_if(metin, is_any_of("-")) << endl; //metnin solundaki boşlukları kaldırarak '-' ekler.
+    cout << trim_right_copy_if(metin, is_any_of("-")) << endl;//metnin sağındaki boşlukları kaldırarak '-' ekler.
+    cout<< metin<< endl;
+    cout << trim_copy_if(metin, is_any_of("-")) << endl;// 1. parametredeki verilen değişkendeki ikinci parametreyi siler.
+    return 0;
+}
+----
+
+Ekran Çıktısı:
+
+ Boost C++ Libraries--
+ --Boost C++ Libraries
+ --Boost C++ Libraries--
+ Boost C++ Libraries
+
+
+== Diğer Metotlar
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+int main()
+{
+    string metin = "Boost C++ Libraries";
+    cout.setf(std::ios::boolalpha);// sonuçları 'boolalpha' ile  true/false döndürür.
+    //Bu satır yazılmamış olsaydı sonuçlar 0-1 olarak döndürülecekti.
+    cout << starts_with(metin, "Boost") << endl;  //Metnin başlangıcı Boost mu?
+    cout << ends_with(metin, "Libraries") << endl;  //Metnin sonu Libraries mi?
+    cout << contains(metin, "C++") << endl; // metnin içerisinde 2. parametre  var mı?
+    cout << lexicographical_compare(metin, "Boost") << endl; // iki string'i karşılaştırır
+}
+----
+
+Ekran Çıktısı:
+
+ true
+ true
+ true
+ false
+
+*cout.setf(std::ios::boolalpha);* satırı geri döndürülen değerin 0-1 lerden değil true-false lardan oluşacağını belirtir.
+Yukarıdaki kodda true-false olarak yazdırır.
+
+*starts_with(metin, "Boost"):* Metnin başlangıcı Boost mu? kontrolü yapar.
+
+*ends_with(metin, "Libraries"):* Metnin sonu Libraries ile bitiyor mu? kontrolü yapar.
+
+*contains(metin, "C"):* Metnin içerisinde "C" geçiyor mu? kontrolü yapar.
+
+*lexicographical_compare(metin, "Boost") :*
+
+
+
+== split
+Metin içerisindeki boşlukları verir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <vector>
+#include <iostream>
+
+using namespace boost::algorithm;
+using  namespace std;
+
+int main()
+{
+    string metin = "Boost C++ Libraries";
+    vector<string> say;
+    split(say, metin, is_space()); /// Boşlukları is_space() metodu ile sayar ve vektore atar
+    cout << say.size() << endl; // Vektorun boyutu boşlukların sayısıdır
+}
+----
+
+Ekran Çıktısı:
+ 3
+
+== find_regex
+
+Başlık dosyasını regex eklerseniz, aynı adı taşıyan sınıfları ve işlevleri std ad alanında kullanabilirsiniz.
+
+Örneğin;
+
+[source, c++]
+----
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::algorithm;
+using  namespace std;
+
+//Bir ifadeyi aramak için boost::algorithm::find_regex() kullanılır.
+int main()
+{
+    string metin = "Boost C++ Libraries";
+    boost::iterator_range<std::string::iterator> r ;
+         r=find_regex(metin, boost::regex{"\\w\\+\\+"});
+    cout << r << endl;
+    r=find_regex(metin, boost::regex{"\\w\\+"});
+    cout << r << endl;
+    r=find_regex(metin, boost::regex{"\\w"});
+    cout << r << endl;
+}
+----
+
+
+Bu kodu çalıştırmak için CMakeLists.txt' yi aşağıdaki gibi düzenlemeniz gerekir.
+
+Örneğin;
+
+[source, c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(find_regex)
+
+set(CMAKE_CXX_STANDARD 14)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_72_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(find_regex main.cpp)
+
+target_link_libraries(find_regex  ${Boost_LIBRARIES})
+----
+
+ set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_72_0/") 
+
+satırını bilgisayarınızda Boost'un kurulu olduğu yerin yolunu vererek düzenleyebilirsiniz.
+
+Ekran Çıktısı:
+
+ C++
+ C+
+ B

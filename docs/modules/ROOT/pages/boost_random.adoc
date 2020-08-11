@@ -1,0 +1,67 @@
+== Boost.Random
+
+Boost.Random kütüphanesi, rastgele sayıların nasıl üretileceğine karar vermenizi sağlayan çok sayıda rastgele sayı üreteci sağlar. C + + 'da cstdlib'den std::rand() ile rastgele sayılar üretmek her zaman mümkün olmuştur. Bununla birlikte, std::rand() ile rastgele sayıların üretilme şekli standart kütüphanenin nasıl uygulandığına bağlıdır.
+
+Boost/random.hpp başlık dosyasını eklediğinizde Boost.Random'daki tüm rasgele sayı üreteçlerini ve diğer sınıfları ve fonksiyonlarını kullanabilirsiniz.
+
+Bu kütüphanenin büyük bölümleri C + + 11 ile standart kütüphaneye eklendi. Geliştirme ortamınız C + + 11'i destekliyorsa, bu bölümdeki Boost.Random örneklerini rasgele başlık dosyasını ekleyerek ve ad alanı std'ye erişerek yeniden yazabilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+#include <iostream>
+#include <ctime>
+#include <cstdint>
+
+
+int main()
+{
+    std::time_t now = std::time(0);//0'dan başlatılan sayi sayacı(timer)
+    boost::random::mt19937 sayi1{static_cast<std::uint32_t>(now)};//boost::random::mt19937 tarafından üretilen rastgele sayılar tamsayıdır.
+    std::cout << sayi1() << '\n';//üretilen sayıyı yazar
+
+   /* std::cout <<"----\n";
+              boost::random::random_device sayi2;
+   //boost::random::random_device, gerçek rastgele sayılar üretebilen rastgele bir sayı üreteci olan deterministik olmayan
+    //rastgele sayı üretecidir
+    std::cout << sayi2() << '\n';*/
+
+    std::cout <<"----\n";
+    boost::random::mt19937 sayi3{static_cast<std::uint32_t>(now)};//boost::random::mt19937 tarafından üretilen rastgele sayılar tamsayıdır.
+    boost::random::uniform_int_distribution<> dist{1, 100};
+    //boost::random::uniform_int_distribution ihtiyacınız olan rastgele sayı aralığını tanımlamanızı sağlar
+    std::cout << dist(sayi3) << '\n';
+}
+----
+
+Ekran Çıktısı:
+
+ 3592991067
+ ----
+ 84
+
+
+Örnekte, rasgele sayı üretecine boost::random::mt19937 ile erişir . 
+boost::random::mt19937 tarafından üretilen rastgele sayılar tamsayıdır. Tamsayıların mı yoksa kayan nokta sayılarının mı üretileceği, kullandığınız üreticiye bağlıdır. Tüm rasgele sayı üreteçleri, rasgele sayıların türünü belirlemek için result_type türünü tanımlar. Boost::random::mt19937 için result_type boost::uint32_t 'dir.
+
+Tüm rasgele sayı üreteçleri iki fonksiyon sağlar: min() ve max(). Bu fonksiyonlar, rasgele sayı üreteci tarafından üretilebilecek en küçük ve en büyük sayıyı döndürür.
+
+Boost.Random tarafından sağlanan rasgele sayı üreteçlerinin neredeyse tamamı yalancı rasgele sayı üreteçleridir. Sahte rastgele sayı üreteçleri gerçek rastgele sayılar üretmez. Görünüşte rastgele sayılar üreten algoritmalara dayanırlar. Boost::random::mt19937 bu sözde rasgele sayı üreticilerinden biridir.
+Yalancı rasgele sayı üreteçlerinin tipik olarak başlatılması gerekir. Aynı değerlerle başlatılmışlarsa, aynı rastgele sayıları döndürürler. Bu nedenle Örnekte std::time() dönüş değeri boost::random::mt19937 yapıcısına iletilir. Bu, program farklı zamanlarda çalıştırıldığında farklı rasgele sayıların üretilmesini sağlamalıdır.
+
+std::rand() ayrıca std::srand() ile başlatılması gereken sözde rasgele bir sayı üretecini temel alır. Bununla birlikte, Boost.Random, işletim sistemi gerçek rastgele sayılar üretmek için bir kaynağa sahip olduğu sürece gerçek rastgele sayılar üretebilen rastgele bir sayı üreteci sağlar.
+
+Boost::random::random_device, gerçek rastgele sayılar üretebilen rastgele bir sayı üreteci olan deterministik olmayan rastgele bir sayı üretecidir. Başlatılması gereken bir algoritma yoktur. Böylece, rastgele sayıları tahmin etmek imkansızdır. Deterministik olmayan rasgele sayı üreteçleri genellikle güvenlikle ilgili uygulamalarda kullanılır. Boost::random::random_device rastgele sayılar üretmek için işletim sistemi fonksiyonlarını çağırır.
+
+Boost::random::random_device sınıfını kullanmak istiyorsanız dosyanın başına boost/random/random_device.hpp satırını dahil etmeniz gerekir.
+
+
+boost::random::uniform_int_distribution ihtiyacınız olan rastgele sayı aralığını tanımlamanızı sağlar. Örnekte'te dist, 1 ile 100 arasında bir sayı döndürür. 1 ve 100 alt ve üst sınırları kapsayıcıdır.
+
+
+Boost.Random'da boost::random::bernoulli_distribution ve boost::random::uniform_int_distribution dışında birçok dağıtım vardır. Örneğin, istatistiklerde kullanılan boost::random::normal_distribution ve boost::random::chi_squared_distribution gibi dağıtımlar vardır.
+
+

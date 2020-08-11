@@ -1,0 +1,186 @@
+== Boost.Bimap
+
+Boost.Bimap kütüphanesi Boost.MultiIndex tabanlıdır ve ilk olarak tanımlanmadan hemen kullanılabilen bir container sağlar. Kapsayıcı std::map'e benzer, ancak her iki taraftanda değerleri aramayı destekler. Boost.Bimap, haritaya nasıl eriştiğinize bağlı olarak her iki tarafında anahtar olabileceği haritalar oluşturmanıza olanak tanır. Sol tarafa anahtar olarak eriştiğinizde, sağ taraf değerdir ve bunun tersi de geçerlidir.
+
+
+Örneğin;
+
+[source code]
+----
+#include <boost/bimap.hpp>
+#include <string>
+#include <iostream>
+
+using  namespace std;
+
+int main()
+{
+    typedef boost::bimap<std::string, int> bimap;//boost kütüphanesinin bimap metodunu kullanmak ve
+    // tekrar tekrar tanımlamamak için typedef oluşturur.
+    bimap animals;//bimap tipinde animals dizisini tanımladık
+
+    animals.insert({"cat", 4});
+    animals.insert({"shark", 0});
+    animals.insert({"spider", 8});//insert(): bimap tipinde animals dizisine hayvanAdi ve bacakSayisi elemanlarını ekler
+
+    cout << animals.left.count("cat") << endl;//bimap tipindeki animals dizisinin soluna havanAdi olarak cat'i ekler
+    cout << animals.right.count(8) << endl;//bimap tipindeki animals dizisinin soluna bacaksayisi olarak 8 değerini ekler
+    animals.clear();// animals dizisini temizler
+    cout<< "animals temizlendi"<< endl;
+    cout << animals.left.count("shark") << endl;//animals dizisinde shark elemanını bulamadığı için geriye 0 değerini döndürür
+    cout << animals.right.count(4) << endl;//animals dizisinde 4 indeksli elemanı bulamadığı için geriye 0 değerini döndürür
+    //cout << animals.right.count("aa") << endl;//bimap'in sağında böyle birşey olmadığı için eşleştirme bulamaz.
+
+    animals.insert({"cat", 4});
+    animals.insert({"shark", 0});
+    animals.insert({"spider", 8});//bimap dizisine elemanlar eklenir
+
+    for (auto iter = animals.begin(); iter != animals.end(); ++iter)//bimap tipinde animals dizisi foreach ile yazdırılır
+        cout << iter->left << " has " << iter->right << " legs" << endl;
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 1
+ animals temizlendi
+ 0
+ 0
+ cat has 4 legs
+ shark has 0 legs
+ spider has 8 legs
+
+
+Boost::bimap boost/bimap.hpp dosyasında tanımlanmıştır ve boost::bimap tarafından birleştirilen std::map türündeki iki kapsayıcıya erişmek için kullanılabilen sol ve sağ olmak üzere iki üye değişken sağlar. 
+
+Yukarıdaki örnekte sol, kapsayıcıya erişmek için std::string türündeki anahtarları, sağ ise int türündeki anahtarları kullanır.
+
+Aşağıdaki örnekte bir sol veya sağ kapsayıcı kullanarak bireysel kayıtlara erişimi desteklemenin yanı sıra, boost::bimap kayıtları ilişki olarak görüntülemenizi sağlar.
+
+Sola veya sağa kullanarak kayıtlara erişmek gerekli değildir. Kayıtlar üzerinde yineleme yapılarak, ayrı bir kaydın sol ve sağ kısımları yineleyici aracılığıyla erişilebilir hale getirilir.
+
+std::map'e aynı anahtarı kullanarak birden fazla kayıt saklayabilen std::multimap adlı bir kap eşlik ederken, boost::bimap için böyle bir eşdeğer yoktur. Ancak bu, boost::bimap türünde bir kapta aynı anahtarla birden çok kayıt depolamanın imkansız olduğu anlamına gelmez. Kesin olarak, gerekli iki şablon parametresi, depolanacak öğelerin türlerini değil, sol ve sağ için konteyner türlerini belirtir. Herhangi bir kapsayıcı türü belirtilmezse, varsayılan olarak boost::bimaps::set_of kapsayıcı türü kullanılır. Bu kapsayıcı, std::map gibi, yalnızca benzersiz anahtarlara sahip kayıtları kabul eder.
+
+Örneğin; boost::bimaps::set_of 
+
+[source,c++]
+----
+#include <boost/bimap.hpp>
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+  typedef boost::bimap<boost::bimaps::set_of<std::string>,
+  boost::bimaps::set_of<int>> bimap;
+  bimap animals;
+  //animals dizisine sol veya sağ tarafa kaydedileceğinin türü belirtilmezse, varsayılan olarak boost::bimaps::set_of
+  //kullanılır.boost::bimaps::set_of, std::map gibi, yalnızca benzersiz anahtarlara sahip kayıtları kabul eder.
+
+  animals.insert({"cat", 4});
+  animals.insert({"shark", 0});
+  animals.insert({"spider", 8});//insert(): bimap tipinde animals dizisine hayvanAdi ve bacakSayisi elemanlarını ekler
+
+    cout << animals.left.count("spider") << endl; //bimap tipindeki animals dizisinin soluna havanAdi olarak spider'i ekler
+  cout << animals.right.count(8) << endl;//bimap tipindeki animals dizisinin soluna bacaksayisi olarak 8 degerini ekler
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 1
+ 
+Bu örnekte; boost::bimaps::set_of dosyasını belirtir.
+Boost::bimaps::set_of dışındaki diğer kap tipleri boost::bimap 'ı özelleştirmek için kullanılabilir.
+
+
+Örneğin; boost::bimaps::multiset_of
+
+[source,c++]
+----
+#include <boost/bimap.hpp>
+#include <boost/bimap/multiset_of.hpp>
+#include <string>
+#include <iostream>
+
+using  namespace std;
+
+int main()
+{
+    typedef boost::bimap<boost::bimaps::set_of<std::string>,
+            boost::bimaps::multiset_of<int>> bimap; //boost::bimaps::set_of ' dan farkı id'leri primary key gibi kullanmasıdır.
+    bimap animals;
+
+    animals.insert({"cat", 4});
+    animals.insert({"shark", 0});
+    animals.insert({"dog", 4});//insert(): bimap tipinde animals dizisine hayvanAdi ve bacakSayisi elemanlarını ekler
+
+    cout << animals.left.count("dog") << endl;//bimap tipindeki animals dizisinin soluna havanAdi olarak dog değerini ekler
+    cout << animals.right.count(4) << endl;//bimap tipindeki animals dizisinin soluna bacaksayisi olarak 4 degerini ekler
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 2
+ 
+Örnekte, boost/bimap/multiset_of.hpp içinde tanımlanan boost::bimaps::multiset_of konteyner türünü kullanır. Anahtarların benzersiz olması gerekmemesi dışında boost::bimaps::set_of gibi çalışır.
+
+
+Boost::bimaps::set_of, boost::bimap türündeki kapsayıcılar için varsayılan olarak kullanıldığından, boost/bimap/set_of.hpp başlık dosyasının açıkça eklenmesine gerek yoktur. Ancak, diğer container türlerini kullanırken, karşılık gelen başlık dosyalarının dahil edilmesi gerekir.
+
+Yukarıda gösterilen sınıflara ek olarak, Boost.Bimap aşağıdakileri sağlar: 
+
+boost::bimaps::unordered_set_of,
+
+boost::bimaps::unordered_multiset_of,
+
+boost::bimaps::list_of,
+
+boost::bimaps::vector_of ve
+
+boost::bimaps::unconstrained_set_of. 
+
+Boost::bimaps::unconstrained_set_of dışında, diğer tüm container tipleri standart kütüphanedeki benzerleri gibi çalışır.
+
+Örneğin; boost::bimaps::unconstrained_set_of
+
+[source,c++]
+----
+#include <boost/bimap.hpp>
+#include <boost/bimap/unconstrained_set_of.hpp>
+#include <boost/bimap/support/lambda.hpp>
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+  typedef boost::bimap<std::string,
+  boost::bimaps::unconstrained_set_of<int>> bimap;//boost::bimaps::unconstrained_set_of boost::bimap'in bir tarafını devre dışı bırakmak için kullanılabilir.
+  //boost::bimap std::map gibi davranır. Hayvanları bacak sayılarına göre arama hakkına erişemezsiniz.
+  bimap animals;
+
+  animals.insert({"cat", 4});
+  animals.insert({"shark", 0});
+  animals.insert({"spider", 8});//insert(): bimap tipinde animals dizisine hayvanAdi ve bacakSayisi elemanlarını ekler
+
+  auto it = animals.left.find("cat");//cat'i değiştir
+  animals.left.modify_key(it, boost::bimaps::_key = "dog");//cat yerine dog yaz
+ //  std :: map ile bimap'teki değer değiştirilemez. Değer değiştirme işlemleri change_key() kullanarak yapılır.
+  cout << it->first << endl;
+  
+}
+----
+
+Ekran Çıktısı: dog
+
+Boost::bimaps::unconstrained_set_of boost::bimap'in bir tarafını devre dışı bırakmak için kullanılabilir. Örnekte boost::bimap std::map gibi davranır. Hayvanları bacaklarına göre arama hakkına erişemezsiniz.
+
+

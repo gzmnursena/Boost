@@ -1,0 +1,75 @@
+== Boost.Fusion
+
+Standart kütüphane tek bir ortak noktaya sahip çok sayıda container sağlar. Bunlar homojendir. Yani, standart kitaplıktaki container lar yalnızca bir tür öğeyi depolayabilir. Std::vector int türünde bir vektör yalnızca int değerlerini depolayabilir ve std::vector std::string türünde bir vektör yalnızca metinsel ifadeleri depolayabilir.
+
+Fusion, heterojen container oluşturulmasını mümkün kılar. Örneğin, ilk öğesi int olan ve ikinci öğesi string olan bir vektör oluşturabilirsiniz. Ek olarak, Boost.Fusion heterojen container ları işlemek için algoritmalar sağlar. Boost.Fusion'ı heterojen container lar için standart kütüphane olarak düşünebilirsiniz.
+
+C + + 11'den beri, standart kütüphane std::tuple ile heterojen bir kap sağladı. Bir demet içinde depolanan değerler için farklı tipler kullanabilirsiniz. 
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/fusion/tuple.hpp>
+#include <boost/fusion/view.hpp>
+#include <boost/fusion/algorithm.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/mpl/arg.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::fusion;
+
+struct print
+{
+    template <typename T>
+    void operator()(const T &t) const
+    {
+        std::cout << std::boolalpha << t << '\n';
+    }
+};
+
+int main()
+{
+    typedef tuple<int, std::string, bool, double> tuple_type; //tuple_type 'den typedef oluşturur
+    tuple_type dizi{10, "Boost", true, 3.14};//struct gibi çalışır. içerisine farklı turde tipteki sonuclar eklenebilir
+    std::cout << get<0>(dizi) << '\n';//tuple_type'in 0.indeksteki elemanını verir
+    std::cout << get<1>(dizi) << '\n';//tuple_type'in 1. indeksteki elemanını verir
+    std::cout << std::boolalpha << get<2>(dizi) << '\n';//tuple_type'in 2.indeksteki elemanını verir
+    std::cout << get<3>(dizi) << '\n';//tuple_type'in 3.indeksteki elemanını verir
+
+    std::cout<< "-------------"<< std::endl;
+
+    typedef tuple<int, std::string, bool, double> tuple_type;
+    tuple_type t{10, "Boost", true, 3.14};
+    for_each(t, print{}); //yukarida yapilan islemleri for_each dongusune gondererek yazdirir.
+
+    std::cout<< "-------------"<< std::endl;
+
+    typedef vector<int, std::string, bool, double> vector_type;
+    vector_type vektor{10, "Boost", true, 3.14};//typedef'ten vektor olusturulur
+    std::cout << at<boost::mpl::int_<0>>(vektor) << '\n';//vektorun ilk elemanı (0.indeksteki elemani) yazdirilir
+
+    auto v2 = push_back(vektor, 'X');//vektorun sonuna eleman ekler
+    std::cout << size(vektor) << '\n';//vektorun en son haldeki boyutunu verir
+
+}
+----
+
+
+Ekran Çıktısı:
+ 
+ 10
+ Boost
+ true
+ 3.14
+ -------------
+ 10
+ Boost
+ true
+ 3.14
+ -------------
+ 10
+ 4
+
+

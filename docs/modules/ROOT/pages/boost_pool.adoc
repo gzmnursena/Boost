@@ -1,0 +1,85 @@
+== Boost.Pool
+
+Boost.Pool, belleği yönetmek için birkaç sınıf içeren bir kütüphanedir. C + + programları belleği dinamik olarak ayırmak için genellikle yenilerini kullanırken, belleğin nasıl sağlandığının ayrıntıları standart kitaplığın ve işletim sisteminin uygulanmasına bağlıdır. Boost.Pool ile, örneğin programınıza daha hızlı bellek sağlamak için bellek yönetimini hızlandırabilirsiniz.
+
+Bu bellek yönetimi kavramına basit ayrılmış depolama denir. Boost.Pool tarafından desteklenen tek konsept budur. Aynı boyutta birçok nesnenin sık sık oluşturulması ve imha edilmesi gerektiğinde özellikle yararlıdır. Bu durumda gerekli bellek hızlı bir şekilde sağlanabilir ve serbest bırakılabilir.
+
+Boost.Pool, ayrılmış bellek oluşturmak ve yönetmek için boost::simple_segregated_storage sınıfını sağlar. Boost::simple_segregated_storage, genellikle doğrudan programlarınızda kullanmayacağınız düşük düzeyli bir sınıftır. Sadece aşağıdaki örnekte basit ayrılmış depolamayı göstermek için kullanılır. Boost.Pool'daki diğer tüm sınıflar dahili olarak boost::simple_segregated_storage'a dayanır.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/pool/simple_segregated_storage.hpp>
+#include <boost/pool/object_pool.hpp>
+#include <vector>
+#include <cstddef>
+#include <iostream>
+
+int main()
+{
+    boost::simple_segregated_storage<std::size_t> storage;//std::size_t'yi template parametresi olarak geçirir.
+    std::vector<char> v(1024);
+    storage.add_block(&v.front(), v.size(), 256);
+    /*boost::simple_segregated_storage adlı fonksiyonlar ilk olarak, 1024 baytlık bir bellek bloğunu depoya geçirmek için
+     add_block() fonksiyonu çağrılır. Bellek v vektörü tarafından sağlanır. add_block() fonksiyonunda iletilen üçüncü parametre,
+     bellek bloğunun her biri 256 baytlık bölümler halinde bölümlenmesi gerektiğini belirtir.
+     Bellek bloğunun toplam boyutu 1024 bayt olduğundan, depolama tarafından yönetilen bellek dört bölümden oluşur.*/
+
+
+    //malloc() ve malloc_n () fonksiyonları depolamadan bellek ister
+     int *i = static_cast<int*>(storage.malloc());//malloc() :serbest segmente bir işaretçi döndürürken
+    *i = 1;
+
+    int *j = static_cast<int*>(storage.malloc_n(1, 512));//malloc_n() bir blokta istendiği kadar bayt
+    // sağlayan bir veya daha fazla bitişik segmente bir işaretçi döndürür.
+
+    //Örnekte malloc_n() ile 512 baytlık bir blok ister. Bu çağrı iki bölüm tüketir, çünkü her bölüm 256 bayttır.
+    // malloc() ve malloc_n () fonksiyonlarından sonra, depolama alanında yalnızca bir tane kullanılmamış segment kalır.*/
+
+    j[10] = 2;
+
+    storage.free(i);//tüm segmentler free() ve free_n() ile serbest bırakılır.
+    storage.free_n(j, 1, 512);
+
+    //Bu iki çağrıdan sonra, tüm segmentler kullanılabilir ve malloc() veya malloc_n() ile tekrar istenebilir.
+
+
+   //Boost::object_pool belleği otomatik olarak ayırır. Örnekte malloc() öğesine yapılan çağrı, pool'un 32 int değeri
+   // olan bir bellek bloğu tahsis etmesini sağlar. malloc(), bu 32 segmentten ilkine int değerinin tam olarak
+   // sığabileceği bir işaretçi döndürür.
+    std::cout<<"----\n";
+    boost::object_pool<int> pool;
+
+    int *k = pool.malloc();//malloc() fonksiyonu int  türünde bir işaretçi döndürür.
+    *k = 1;
+
+   int *l = pool.construct(2);//construct() fonksiyonu, işletim sisteminden bellek istemesini sağlamaz.
+    pool.destroy(k);//destroy() fonksiyonu int nesnesini serbest bırakır
+    pool.destroy(l);
+
+}
+----
+
+
+Ekran Çıktısı:
+
+ ----
+ Process finished with exit code 0
+
+Boost::simple_segregated_storage sınıf şablonunu kullanmak için boost/pool/simple_segregated_storage.hpp başlık dosyası eklenmelidir.Yukarıdaki örnekte std::size_t'yi template parametresi olarak geçirir. Bu parametre, örneğin bir segmentin boyutuna başvurmak için boost::simple_segregated_storage öğesinin fonksiyonlarına iletilen sayılar için hangi türün kullanılması gerektiğini belirtir. Bu şablon parametresinin pratik ilgisi oldukça düşüktür.
+
+Daha ilginç olan boost::simple_segregated_storage adlı fonksiyonlardır. İlk olarak, 1024 baytlık bir bellek bloğunu depoya geçirmek için add_block() fonksiyonu çağrılır. Bellek v vektörü tarafından sağlanır. Add_block() fonksiyonunda iletilen üçüncü parametre, bellek bloğunun her biri 256 baytlık bölümler halinde bölümlenmesi gerektiğini belirtir. Bellek bloğunun toplam boyutu 1024 bayt olduğundan, depolama tarafından yönetilen bellek dört bölümden oluşur.
+
+malloc() ve malloc_n () fonksiyonları depolamadan bellek ister. malloc() bir serbest segmente bir işaretçi döndürürken, malloc_n() bir blokta istendiği kadar bayt sağlayan bir veya daha fazla bitişik segmente bir işaretçi döndürür. Örnekte malloc_n() ile 512 baytlık bir blok ister. Bu çağrı iki bölüm tüketir, çünkü her bölüm 256 bayttır. malloc() ve malloc_n () fonksiyonlarından sonra, depolama alanında yalnızca bir tane kullanılmamış segment kalır.
+
+Örneğin sonunda tüm segmentler free() ve free_n() ile serbest bırakılır. Bu iki çağrıdan sonra, tüm segmentler kullanılabilir ve malloc() veya malloc_n() ile tekrar istenebilir.
+
+Genellikle doğrudan boost::simple_segregated_storage kullanmazsınız. Boost.Pool, hafızayı kendiniz ayırmanıza ve boost::simple_segregated_storage'a aktarmak zorunda kalmadan otomatik olarak hafıza ayıran diğer sınıfları sağlar.
+
+*malloc() fonksiyonu int  türünde bir işaretçi döndürür.*
+
+*construct() fonksiyonu*, işletim sisteminden bellek istemesini sağlamaz.
+
+*destroy() fonksiyonu* int nesnesini serbest bırakır.

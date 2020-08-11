@@ -1,0 +1,89 @@
+== Boost.Timer
+
+
+Boost.Timer kod performansını ölçmek için saatler sağlar. İlk başta, bu kütüphane Boost.Chrono ile rekabet ediyor gibi görünebilir. Ancak, Boost.Chrono rastgele süreleri ölçmek için saatler sağlarken, Boost.Timer kodu yürütmek için gereken süreyi ölçer. Boost.Timer Boost.Chrono kullanıyor olsada, kod performansını ölçmek istediğinizde Boost.Chrono yerine Boost.Timer kullanmalısınız.
+
+Boost kitaplıklarının 1.48.0 sürümünden beri, Boost.Timer'in iki sürümü vardır. Boost.Timer'ın ikinci sürümünde yalnızca bir başlık dosyası vardır: boost/timer/timer.hpp. Kütüphane ayrıca bir başlık dosyası boost/timer.hpp gönderir. Bu başlık dosyasını kullanmayın. Artık kullanılmaması gereken Boost.Timer'in ilk sürümüne aittir.
+
+Boost.Timer tarafından sağlanan saatler boost::timer::cpu_timer ve boost::timer::auto_cpu_timer sınıflarında uygulanır. boost::timer::auto_cpu_timer boost::timer::cpu_timer öğesinden türetilir ve yıkıcıdaki zamanı otomatik olarak durdurur. Daha sonra zamanı bir çıkış akışına yazar.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/timer/timer.hpp>
+#include <iostream>
+#include <cmath>
+
+using namespace boost::timer;
+using namespace std;
+
+int main()
+{
+    cpu_timer timer;  //Boost::timer::cpu_tımer örneği oluşturulduğunda ölçüm başlar.
+    // Geçen süreyi almak için herhangi bir noktada üye fonksiyonu olarak format() çağırabilirsiniz.
+    
+    for (int i = 0; i < 1000000; ++i)
+        std::pow(1.234, i);//1000000 kez 1.234 üzeri i 'yi bulur
+    std::cout << timer.format() << '\n';//bu işlem bulunana kadar sistemde geçen zamanı verir
+
+    timer.stop();//Boost::timer::cpu_timer zamanlayıcılarını durdurur
+
+    for (int i = 0; i < 1000000; ++i)
+        std::pow(1.234, i);
+    std::cout << timer.format() << '\n';
+
+    timer.resume();//Boost::timer::cpu_timer zamanlayıcılarını devam ettirir
+
+    for (int i = 0; i < 1000000; ++i)
+        std::pow(1.234, i);
+    std::cout << timer.format() << '\n';
+}
+----
+
+Ekran Çıktısı:
+ 
+  0.047565s wall, 0.050000s user + 0.000000s system = 0.050000s CPU (105.1%)
+  0.047648s wall, 0.050000s user + 0.000000s system = 0.050000s CPU (104.9%)
+  0.092278s wall, 0.100000s user + 0.000000s system = 0.100000s CPU (108.4%)
+ 
+ 
+Boost::timer::cpu_timer zamanlayıcıları durduran ve sürdüren  fonksiyonlara sahiptir(stop() ve resume() fonksiyonları). Örnekte, döngü için ikinci saniye önce zamanlayıcı durdurulur ve daha sonra devam ettirilir. Böylece, ikinci döngü ölçülmez. Bu, bir süre sonra durdurulan ve devam ettirilen bir kronometreye benzer. Örnekte ikinci format() çağrısı tarafından döndürülen süre, döngü için ikinci yok gibi.
+
+Boost::timer::cpu_timer ayrıca bir timer'ı başlatma fonksiyonu da start() sağlar. *Start() yerine call() öğesini çağırırsanız, zamanlayıcı sıfırdan yeniden başlar.* Boost::timer::cpu_timer yapıcısı start() öğesini çağırır, bu yüzden boost::timer::cpu_timer somutlaştırıldığında zamanlayıcı hemen başlar.
+
+Kodların doğru bir şekilde çalışması için CMakeLists.txt dosyası aşağıdaki gibi düzenlenmelidir.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(sample_1)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/asli/Downloads/boost_1_71_0/")
+
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+find_package(Boost 1.71.0
+        REQUIRED date_time filesystem system iostreams timer unit_test_framework
+        ${BOOST_PYTHON})
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample_1 main.cpp)
+
+target_link_libraries(sample_1  ${Boost_LIBRARIES})
+----
+

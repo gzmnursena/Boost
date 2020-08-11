@@ -1,0 +1,210 @@
+== Boost.Signals2
+
+Boost.Signals2, sinyal/yuva kavramını uygular. Yuva adı verilen bir veya daha fazla fonksiyon, sinyal yayabilecek bir nesneyle bağlantılıdır. Sinyal her verildiğinde, bağlı fonksiyonlar çağrılır.
+
+Sinyal/yuva kavramı, örneğin, grafik kullanıcı arayüzlerine sahip uygulamalar geliştirirken faydalı olabilir. Düğmeler, kullanıcı üzerlerine tıkladığında sinyal verecek şekilde modellenebilir. Kullanıcı girdisini işlemek için birçok işleve bağlantıyı destekleyebilirler. Bu şekilde olayları esnek bir şekilde işlemek mümkündür.
+
+Std::function olay işleme için de kullanılabilir. Std::function ve Boost.Signals2 arasındaki önemli bir fark, Boost.Signals2 öğesinin birden fazla olay işleyicisini tek bir olayla ilişkilendirebilmesidir. Bu nedenle, Boost.Signals2, olay güdümlü gelişimi desteklemek için daha iyidir ve olayların işlenmesi gerektiğinde ilk tercih olmalıdır.
+
+Boost.Signals2, kullanımdan kaldırılan ve konu anlatımında ele alınmayan Boost.Signals kütüphanesini başarıyla tamamlar.
+
+
+
+Boost.Signals2, bir sinyal oluşturmak için kullanılabilecek boost::signal2::signal sınıfını sunar. Bu sınıf boost/signal2/signal.hpp satırı ile tanımlanır. Alternatif olarak, Boost.Signals2 içinde bulunan tüm sınıfları ve fonksiyonları tanımlayan boost/signal2.hpp satırını kullanabilirsiniz.
+
+Boost.Signals2, boost::signal2::signal ve diğer sınıfları ve boost::signal2 ad alanındaki tüm işlevleri tanımlar.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/signals2.hpp>
+#include <functional>
+#include <iostream>
+
+using namespace boost::signals2;
+
+void hello() { std::cout << "Hello"; }
+void world() { std::cout << ", world!\n"; }
+
+int main()
+{
+    std::function<void()> f;
+    f = []{ std::cout << "Hello, world!\n"; };
+    f();
+    /*fonksiyon sadece f çağrıldığında da yürütülür. Std::function yalnızca Örnekteki gibi kullanılabilirken,
+     Boost.Signals2 çok daha fazla çeşitlilik sağlar. Örneğin, birden fazla işlevi belirli bir sinyalle ilişkilendirebilir*/
+
+
+    /*boost::signal2::signal : Tekrar tekrar connect() fonksiyonunu çağırarak belirli bir sinyale birden fazla fonksiyon atamanızı sağlar.
+      Sinyal her tetiklendiğinde, fonksiyonlar connect() ile ilişkilendirildikleri sırayla yürütülür. */
+    std::cout<<"----\n";
+    signal<void()> s;
+    s.connect([]{ std::cout << "Hello"; });
+    s.connect([]{ std::cout << ", world!\n"; });
+    s();//Önce hello sonra world yazar
+
+
+
+    std::cout<<"----\n";
+   // signal<void()> s;
+    s.connect(1, []{ std::cout << ", world!\n"; });
+    s.connect(0, []{ std::cout << "Hello"; });
+    s();//Önce 0.indeksi daha sonra 1.indeksi yazar --Hello world
+
+
+    std::cout<<"----\n";
+   // signal<void()> s;
+    s.connect(hello);
+    s.connect(world);
+    s.disconnect(world);//yalnızca "Hello" yazdırır çünkü world  ile ilişki sinyal tetiklenmeden önce serbest bırakılmıştır.
+    s();
+}
+----
+
+
+Ekran Çıktısı:
+ 
+ Hello, world!
+ ----
+ Hello, world!
+ ----
+ Hello, world!
+ Hello, world!
+ ----
+ Hello, world!
+ Hello, world!
+ Hello
+
+
+Örnekte lambda fonksiyonu, f çağrıldığında da yürütülür. Std::function yalnızca örnekteki gibi bir senaryoda kullanılabilirken, Boost.Signals2 çok daha fazla çeşitlilik sağlar. Örneğin, birden fazla fonksiyonu belirli bir sinyalle ilişkilendirebilir
+
+
+*boost::signal2::signal :* Tekrar tekrar connect() fonksiyonunu çağırarak belirli bir sinyale birden fazla fonksiyon atamanızı sağlar. Sinyal her tetiklendiğinde, fonksiyonlar connect() ile ilişkilendirildikleri sırayla yürütülür.
+
+
+*disconnect() :* Sinyali sonlandırmak için disconnect() fonksiyonu kullanılır.
+
+
+
+Fonksiyonlar, boost::signal2::signal tarafından sağlanan connect() ve disconnect()  fonksiyonlarının yardımıyla yönetilebilir. 
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/signals2.hpp>
+#include <iostream>
+
+using namespace boost::signals2;
+
+int main()
+{
+    signal<void()> s;
+    connection c = s.connect([]{ std::cout << "Hello, world!\n"; });//bağlantıyı açar ve "Hello, world!" ifadesini gönderir
+    s();//sinyali çağırır
+    shared_connection_block b{c};
+    //sinyalden çıkarmadan kısa bir süre için bir fonksiyonu engellemek için boost:: signals2:: shared_connection_block kullanılabilir.
+    s();
+    b.unblock();
+    //unblock(): Nesne scope'dan dışına çıktığında, blok otomatik olarak kaldırılır.
+    s();
+    /* fonksiyon iki kez yürütülür. Sinyal s üç kez tetiklenir, ancak fonksiyon ikinci kez çağrılmaz çünkü çağrıyı
+     engellemek için boost::signal2::shared_connection_block türünde bir nesne yaratılır. */
+
+    std::cout<<"----\n";
+
+  shared_connection_block b1{c, false};
+  //False, yapıcıya ikinci parametre olarak iletildiğinden, boost::signal2::shared_connection_block türünün ilk nesnesi,
+  // s sinyaline bağlantıyı engellemez. Bu nedenle, b1 nesnesinde blocking() çağrılması false değerini döndürür.
+  {
+    shared_connection_block b2{c};
+    //sinyalden çıkarmadan kısa bir süre için bir fonksiyonu engellemek için boost:: signals2:: shared_connection_block kullanılabilir.
+    std::cout << std::boolalpha << b1.blocking() << '\n';
+    s();
+      ////s'ye iki kez erişir, ancak fonksiyonu yalnızca ikinci kez çağrılır.
+      // fonksiyon, s'ye ilk erişildiğinde çalıştırılmaz, çünkü erişim yalnızca boost::signal2::shared_connection_block
+      // türünde ikinci bir nesne başlatıldıktan sonra gerçekleşir. Yapıcıya ikinci bir parametre iletilmemesi,
+      // bağlantı nesne tarafından engellenir. S'ye ikinci kez erişildiğinde, b2 kapsam dışına çıktığında blok otomatik olarak kaldırıldığı
+      // için fonksiyon yürütülür.
+  }
+  s();
+
+}
+----
+
+
+Ekran Çıktısı:
+
+ Hello, world!
+ Hello, world!
+ ----
+ false
+ Hello, world!
+
+
+=== Multithreading
+
+Boost.Signals2 tarafından sağlanan hemen hemen tüm sınıflar thread için güvenlidir ve multi thread uygulamalarda kullanılabilir. Örneğin, boost::signal2::signal ve boost::signal2::connection türündeki nesnelere farklı evrelerden erişilebilir.
+
+Öte yandan boost::signal2::shared_connection_block thread için güvenli değildir. Bu sınırlama önemli değildir çünkü boost::signal2::shared_connection_block türünde birden çok nesne farklı thread'lerden oluşturulabilir ve aynı bağlantı nesnesini kullanabilir.
+
+Örneğin;
+
+[sorce,c++]
+----
+#include <boost/signals2.hpp>
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+#include <thread>
+#include <mutex>
+#include <iostream>
+
+boost::signals2::signal<void(int)> s;//boost::signal2::signal türündeki farklı thread'lerden nesnelere eşzamanlı erişimi destekler.
+std::mutex m;
+
+void wait(int seconds)
+{
+    boost::this_thread::sleep_for(boost::chrono::seconds{seconds});//thread'i saniye cinsinden bekletir
+}
+
+void loop()
+//loop() fonksiyonu ilişkili fonksiyonu çağırmak için iki thread oluşturur.
+{
+    for (int i = 0; i < 100; ++i)
+    {
+        wait(1);//1 saniye bekleterek yazdırır
+        s(i);
+    }
+
+}
+
+int main()
+{
+    s.connect([](int i){//bağlantıyı sağlayarak 0-99 arası sayıları yazar.
+        std::lock_guard<std::mutex> lock{m};
+        std::cout << i << '\n';
+    });
+    std::thread t1{loop};
+    std::thread t2{loop};
+    t1.join();//main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+    t2.join();
+}
+----
+
+
+Ekran Çıktısı:
+
+ 0
+ 0
+ 1
+ 1
+ 2
+ 2 
+ .
+ .
+ .
+ 99
+ 99
+
+

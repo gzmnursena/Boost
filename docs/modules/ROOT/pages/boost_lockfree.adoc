@@ -1,0 +1,145 @@
+== Boost.Lockfree
+
+Boost.Lockfree threadler ile güvenli ve kilitsiz containers sağlar. Bu kitaplıktan kapsayıcılar erişimi eşitlemek zorunda kalmadan birden çok thread'e erişilebilir.
+
+1.56.0 sürümünde,  Boost.Lockfree yalnızca iki kapsayıcı sağlar: boost::lockfree::queue türü ve boost::lockfree::stack türü yığını. Kuyruk için ikinci bir uygulama kullanılabilir: boost::lockfree::spsc_queue. Bu sınıf, tam olarak bir thread'in kuyruğa yazdığı ve tam olarak bir thread'in kuyruktan okuduğu kullanım durumları için optimize edilmiştir. Sınıf adındaki kısaltma spsc, tek üretici / tek tüketici anlamına gelir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/lockfree/spsc_queue.hpp>
+#include <thread>
+#include <iostream>
+
+boost::lockfree::spsc_queue<int> q{100};//100 elemanlı boost::lockfree::spsc_queue depolayıcısı
+int sum = 0;
+
+void produce()
+{
+    for (int i = 1; i <= 100; ++i)
+        q.push(i);//q'ya 1-100 arası sayıları ekler
+}
+
+void consume()
+{
+    int i;
+    while (q.pop(i))
+        sum += i;//q'nun elemanlarını sum değişkeninde toplar
+}
+
+int main()
+{
+    std::thread t1{produce};
+    std::thread t2{consume};//consume() fonksiyonunu yürüten ikinci thread sayıları okur ve sum değişkeninde toplar.
+    t1.join();//join(): main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+    t2.join();
+    consume();//Thread'i sonlandıktan sonra consume() fonksiyonunu ikinci kez çağırır
+    std::cout << sum << '\n';//toplamı yazar
+}
+----
+
+
+Ekran Çıktısı:
+ 
+ 5050
+ 
+Örnekte, boost::lockfree::spsc_queue containers kullanılır. Bu, 5050 olan tüm 100 sayının toplamını hesaplamak için gereklidir. consume() fonksiyonunu yürüten ikinci thread sayıları okur ve sum değişkeninde toplar. Kapsayıcı boost::lockfree::spsc_queue iki thread'den eşzamanlı erişimi açıkça desteklediğinden, thread'leri eşitlemek gerekmez.
+
+Thread'i sonlandıktan sonra consume() fonksiyonunu ikinci kez çağırır. Bu, 5050 olan tüm 100 sayının toplamını hesaplamak için gereklidir. consume(), bir döngüdeki kuyruğa eriştiği için sayıları produc() tarafından eklendiklerinden daha hızlı okuyabilir. Kuyruk boşsa, pop() fonksiyonu false değerini döndürür.
+Böylece, diğer thread'teki produc() kuyruğu yeterince hızlı dolduramadığından, thread'i çalıştırarak consume() sonlanabilir. produce() thread'i sonlandırılırsa, tüm sayıların kuyruğa eklendiği açıktır. İkinci consume() çağrısı henüz okunmamış sayıların toplanacağından emin olur.
+
+Sıranın boyutu yapıcıya iletilir. Boost::lockfree::spsc_queue dairesel bir tamponla uygulandığından, Örnekteki kuyruk 100 elemanlık bir kapasiteye sahiptir. Sıra dolu olduğu için bir değer eklenemiyorsa, push() fonksiyonu false değerini döndürür. Örnekte, sıraya tam olarak 100 sayı eklendiğinden push() fonksiyonunun dönüş değerini kontrol etmez. Böylece, 100 eleman yeterlidir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/lockfree/queue.hpp>
+#include <thread>
+#include <atomic>
+#include <iostream>
+
+boost::lockfree::queue<int> q{100};//boost::lockfree::queue'nun boyutu 100 olarak ayarlanmıştır, bu constructor'a iletilen parametredir
+//boost::lockfree::queue, başlangıç boyutu yeterli değilse dinamik olarak ek bellek ayırır.
+std::atomic<int> sum{0}; //std::atomic sayesinde, değişken toplamına erişim de artık thread için güvenlidir.
+
+//örnekte, iki thread consume() fonksiyonunda yürütür
+void produce()
+{
+  for (int i = 1; i <= 10000; ++i)
+    q.push(i);//q'ya 1-100 arası sayıları ekler
+}
+
+void consume()
+{
+  int i;
+  while (q.pop(i))
+    sum += i;//q'nun elemanlarını sum değişkeninde toplar
+}
+
+int main()
+{
+  std::thread t1{produce};//produce fonksiyonunun çağırarak thread'i çalıştırır.
+  std::thread t2{consume};//consume fonksiyonunun çağırarak thread'i çalıştırır.
+  std::thread t3{consume};
+  t1.join(); //join(): main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+  t2.join();
+  t3.join();
+  consume();//Thread'i sonlandıktan sonra consume() fonksiyonunu ikinci kez çağırır
+  std::cout << sum << '\n';//üç thread'i eş zamanlı çalıştırarak toplar ve toplamı ekrana yazar
+}
+----
+
+
+Ekran Çıktısı:
+ 
+ 50005000
+ 
+Örnekte, iki thread consume() fonksiyonunda yürütür. Kuyruktan birden fazla thread'i okuduğundan, boost::lockfree::spsc_queue sınıfı kullanılmamalıdır. Bu örnek bunun yerine boost::lockfree::queue komutunu kullanır.
+
+std::atomic sayesinde, değişken toplamına erişim de artık thread için güvenlidir.
+
+boost::lockfree::queue'nun boyutu 100 olarak ayarlanmıştır, bu constructor'a iletilen parametredir. Ancak, bu yalnızca başlangıç​boyutudur. Varsayılan olarak, boost::lockfree::queue  dairesel bir arabellekle uygulanmaz. Kuyruğa kapasitenin ayarlanmış olduğundan daha fazla öğe eklenirse, otomatik olarak artırılır. Boost::lockfree::queue, başlangıç boyutu yeterli değilse dinamik olarak ek bellek ayırır.
+
+Bu, boost::lockfree::queue mutlaka kilitli olması gerekmediği anlamına gelir. boost::lockfree::queue tarafından varsayılan olarak kullanılan ayırıcı, std::allocator tabanlı boost::lockfree::allocator'dur. Bu nedenle, bu ayırıcı boost::lockfree::queue'nun herhangi bir kısıtlama olmaksızın kilitlenip kilitlenmediğini belirler. 
+
+
+Kodların doğru bir şekilde çalışması için CMakeLists.txt dosyası aşağıdaki gibi düzenlenmelidir.
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.5)
+project(sample2)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/asli/Downloads/boost_1_71_0/")
+
+link_directories(${Boost_LIBRARY_DIRS})
+
+
+find_package(Boost 1.71.0
+        REQUIRED date_time filesystem system iostreams thread unit_test_framework
+        ${BOOST_PYTHON})
+
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample2 main.cpp)
+
+target_link_libraries(sample2  ${Boost_LIBRARIES})
+----
+ 
+ 

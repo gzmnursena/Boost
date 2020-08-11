@@ -1,0 +1,82 @@
+== Boost.Tokenizer
+
+Boost.Tokenizer kütüphanesi, belirli karakterleri ayırıcılar olarak yorumlayarak bir dizedeki kısmi ifadeleri yinelemenize olanak tanır.
+
+Örneğin;
+
+Sırasıyla noktalama işaretine göre ayırma,
+sadece boşluklara göre ayırma,
+boşluk ve + ya göre ayırma
+
+[source,c++]
+----
+#include <boost/tokenizer.hpp>
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+// Boost.Tokenizer kutuphanesi, belirli karakterleri belirli isaretlere gore ayirir.
+
+int main()
+{
+
+    // Noktalama isaretine gore ayirma
+    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+    //tokenizer kütüphanesini aşağıda tekrar tekrar tanımlamamak için typedef olarak tanımlanır.
+    string metin = "Boost C++ Libraries";
+    tokenizer tok{metin};//metin değişkenini tokenizer olarak tanımlar
+    for (tokenizer::iterator iter = tok.begin(); iter != tok.end(); ++iter) //foreach dongusu ile yeni metni(tok) yazdırır
+        cout << *iter << endl;
+
+
+    cout<< endl<< endl;
+
+    //Sadece bosluklara gore ayirma
+    string metin2 = "Boost C++ Libraries";
+    boost::char_separator<char> sep{" "}; //Noktalama işaretlerinin ayırıcı olarak yorumlanmasını önlemek için,
+    //tokenizer'a geçirmeden önce boost::char_separator nesnesini başlatılması gerekir.
+    tokenizer tok2{metin2, sep};//metin2 değişkenini tokenizer olarak tanımlar
+    for (const auto &t : tok2) //foreach dongusu ile yeni metni yazdırır
+        cout << t << endl;
+
+
+    cout<< endl<< endl;
+
+   // Bosluk ve + ya gore ayirma
+    string metin3= "Boost C++ Libraries";
+    boost::char_separator<char> sep2{" ", "+"};
+    tokenizer tok3{metin3, sep2};//metin3 değişkenini tokenizer olarak tanımlar
+    for (const auto &t : tok3)//foreach dongusu ile yeni metni yazdırır
+        cout << t << endl;
+}
+----
+
+CMakeLists.txt
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample_1)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(sample_1 main.cpp)
+----
+
+
+Ekran Çıktısı:
+
+ Boost
+ C
+ +
+ +
+ Libraries
+ Boost
+ C++
+ Libraries
+ Boost
+ C
+ +
+ +
+ Libraries

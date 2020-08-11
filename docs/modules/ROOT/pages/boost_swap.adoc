@@ -1,0 +1,44 @@
+== Boost.Swap
+
+Çok sayıda Boost kütüphanesi kullanıyorsanız ve ayrıca verileri değiştirmek için std::swap () kullanırsanız, alternatif olarak boost::swap() fonksiyonunu da kullanabilirsiniz. boost::swap(), Boost.Swap tarafından sağlanır ve boost/swap.hpp içinde tanımlanır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/swap.hpp>
+#include <boost/array.hpp>
+#include <iostream>
+
+int main()
+{
+    char c1 = 'a';
+    char c2 = 'b';
+
+    std::cout <<"c1 ve c2 değişkenlerinin ilk değerleri: "<< c1 << c2 << '\n';//c1 ve c2 değişkenlerinin ilk değerleri
+
+    boost::swap(c1, c2);//c1 ve c2 değişkenlerinin verilerini değiştirir
+
+    std::cout <<"c1 ve c2 değişkenlerinin yeni değerleri: "<< c1 << c2 << '\n';//c1 ve c2 değişkenlerini ekrana yazar
+
+    boost::array<int, 1> a1{{1}};//1 elemanlı boost dizisi
+    boost::array<int, 1> a2{{2}};//1 elemanlı boost dizisi
+
+    std::cout <<"a1 ve a2 dizilerinin ilk değerleri: "<< a1[0] << a2[0] << '\n';//a1 ve a2 dizilerinin ilk değerleri
+
+    boost::swap(a1, a2);//a1 ve a2 tek elemanlı dizilerindeki verileri değiştirir
+
+    std::cout <<"a1 ve a2 dizilerinin yeni değerleri: "<< a1[0] << a2[0] << '\n';//yeni oluşan a1 ve a2 dizilerinin 0.indeksteki elemanlarını yazar
+}
+----
+
+Ekran Çıktısı:
+
+ c1 ve c2 değişkenlerinin ilk değerleri: ab
+ c1 ve c2 değişkenlerinin yeni değerleri: ba
+ a1 ve a2 dizilerinin ilk değerleri: 12
+ a1 ve a2 dizilerinin yeni değerleri: 21
+ 
+ 
+
+ 

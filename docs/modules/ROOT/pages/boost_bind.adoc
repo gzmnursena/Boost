@@ -1,0 +1,78 @@
+== Boost.Bind
+
+Boost.Bind, başlangıçta std::bind1st() ve std::bind2nd() gerektiren kapasiteyi basitleştiren ve genelleştiren bir kütüphanedir. Bu iki işlev C + + 98 ile standart kütüphaneye eklendi ve imzaları uyumlu olmasa bile işlevlerin bağlanmasını mümkün kıldı.
+
+Boost.Bind, C + + 11 ile standart kütüphaneye eklendi. Geliştirme ortamınız C + + 11'i destekliyorsa, başlık dosyasında std::bind() işlevini işlevsel bulacaksınız. Kullanım durumuna bağlı olarak, lambda fonksiyonlarını veya Boost.Phoenix kullanmak std::bind() veya Boost.Bind'den daha iyi olabilir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/bind.hpp>
+#include <vector>
+#include <algorithm>
+#include <iostream>
+
+using namespace std;
+
+
+void print(int i)
+{
+    cout << i << endl;
+}
+
+
+class print2 : public std::binary_function<std::ostream*, int, void>
+{
+public:
+    void operator()(std::ostream *os, int i) const
+    {
+        *os << i << '\n';
+    }
+};
+
+void print3(std::ostream *os, int i)
+{
+    *os << i << '\n';
+}
+
+int main()
+{
+    vector<int> vektor{1, 3, 2};
+    for_each(vektor.begin(), vektor.end(), print);
+    //std::for_each() parametresinin üçüncü parametresi, tek bir parametre bekleyen fonksiyon nesnesidir.
+    // vektordeki sayıları print() için birbiri ardına tek parametreler olarak geçirir.
+
+
+    cout<<"------------\n";
+    std::for_each(vektor.begin(), vektor.end(), std::bind1st(print2{}, &std::cout));
+
+
+    /*En yukarıdaki gibi, buradada vektor elemanlarını standart çıktıya yazar. Ancak bu kez çıktı akışı print() parametresine geçirilir.
+    Bunu yapmak için print() fonksiyonu std::binary_function işlevinden türetilen bir işlev nesnesi olarak tanımlanır.
+    Boost.Bind ile print() fonksiyonundan fonksiyon nesnesine dönüştürmeniz gerekmez. Bunun yerine, boost/bind.hpp dosyasında tanımlanan
+    boost::bind() fonksiyon şablonunu kullanılır.*/
+
+    cout<<"------------\n";
+    std::for_each(vektor.begin(), vektor.end(), boost::bind(print3, &std::cout, _1));
+
+    /*print() fonksiyonunu fonksiyon nesnesi olarak değil, fonksiyon olarak kullanır. Print() iki parametre beklediğinden,
+     fonksiyon doğrudan std::for_each() dongusune iletilemez. Bunun yerine, boost::bind() std::for_each() 'e,
+     print() ise boost::bind()' nin ilk parametresi olarak geçirilir.*/
+}
+----
+
+
+Ekran Çıktısı:
+
+ 1
+ 3
+ 2
+ ------------
+ 1
+ 3
+ 2
+ ------------
+ 1
+ 3
+ 2

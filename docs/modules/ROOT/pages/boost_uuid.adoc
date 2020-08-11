@@ -1,0 +1,83 @@
+== Boost.Uuid
+
+Boost.Uuid, UUID'ler için jeneratörler sağlar. UUID'ler, merkezi bir koordinasyon örneğine bağlı olmayan evrensel olarak benzersiz tanımlayıcılardır. Örneğin, yeni bir UUID'nin kullanılıp kullanılmadığını görmek için kontrol edilebilen, oluşturulan tüm UUID'leri depolayan hiçbir veritabanı yoktur.
+
+UUID'ler, bileşenleri benzersiz şekilde tanımlaması gereken dağıtılmış sistemler tarafından kullanılır. Örneğin, Microsoft, COM dünyasındaki arabirimleri tanımlamak için UUID'leri kullanır. COM için geliştirilen yeni arayüzler için benzersiz tanımlayıcılar kolayca atanabilir.
+
+UUID'ler 128 bit sayıdır. UUID üretmek için çeşitli metotlar mevcuttur. Örneğin, bir bilgisayarın ağ adresi bir UUID oluşturmak için kullanılabilir. Boost.Uuid tarafından sağlanan jeneratörler, onları üreten bilgisayara geri izlenebilen UUID'lerin üretilmesini önlemek için rastgele bir sayı üretecini temel alır.
+
+Boost.Uuid öğesindeki tüm sınıflar ve fonksiyonlar boost::uuids alanında tanımlanır. 
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/lexical_cast.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::uuids;
+
+int main()
+{
+    random_generator gen;//
+    //boost::uuids::random_generator, C ++11 standart kütüphanesinden veya Boost.Random'dan jeneratörler gibi kullanılır.
+    // Bu sınıf, rasgele UUID'ler oluşturmak için operator() metoduna aşırı yüklenir.
+    uuid id = gen();////üretilen fonksiyonu uuid tipindeki id değişkenine atar.
+
+    std::string s = to_string(id);//uuid tipindeki id değişkenini string'e (cast eder) dönüştürür
+    std::cout << s << '\n';//ekrana string olan değişkeni yazar
+
+    std::cout << boost::lexical_cast<std::string>(id) << '\n';//string değişkeni yazdırırken boost::lexical_cast ile cast eder.
+
+    std::cout<<"----\n";
+
+    // nil_generator bir nil UUID oluşturur.nil_generator Boost.Uuid'den daha fazla jeneratör içerir.
+    nil_generator nil_gen;
+    uuid id2 = nil_gen();
+    std::cout << std::boolalpha << id2.is_nil() << '\n';//is_nil() fonksiyonu yalnızca UUID nil olduğunda true değerini döndürür.
+
+
+    string_generator string_gen;//varolan bir UUID'yi kullanmak istiyorsanız string_generator kullanılır
+    id2 = string_gen("CF77C981-F61B-7817-10FF-D916FCC3EAA4");
+    std::cout << id2.variant() << '\n';//bu satır UUID için, variant() fonksiyonu ile 0 değerini döndürür;
+    // bu, UUID'nin geriye dönük uyumlu NCS standardına uygun olduğu anlamına gelir.
+
+    name_generator name_gen(id2);//name_generator, ad alanlarında UUID'ler oluşturmak için kullanılır
+    std::cout << name_gen("theboostcpplibraries.com") << '\n';
+}
+----
+
+
+Ekran Çıktısı:
+
+ b2038398-fb75-4674-8072-d799b8a86ccf
+ b2038398-fb75-4674-8072-d799b8a86ccf
+ ----
+ true
+ 0
+ 5a88e39c-df6f-580d-88cd-bc32e1c76c82
+
+
+Örnekte rastgele bir UUID oluşturur. Boost/uuid/uuid_generators.hpp dosyasında tanımlanan boost::uuids::random_generator sınıfını kullanır. Bu başlık dosyası Boost.Uuid tarafından sağlanan tüm jeneratörlere erişim sağlar. 
+
+Programda kullanılan komutlar şunlardır:
+
+random_generator: boost::uuids::random_generator, C + +11 standart kütüphanesinden veya Boost.Random'dan jeneratörler gibi kullanılır. Bu sınıf, rasgele UUID'ler oluşturmak için operator() metoduna aşırı yüklenir.
+
+
+uuid id = gen(); satırında üretilen fonksiyonu uuid tipindeki id değişkenine atar.
+
+*to_string() :* metodu bir değişken tipini string'e çevirir
+to_string() fonksiyonu yerine boost::lexical_cast<std::string>(id) castingde kullanılabilir.
+
+*nil_generator* bir nil UUID oluşturur.nil_generator Boost.Uuid'den daha fazla jeneratör içerir.
+
+
+*variant()* fonksiyonu  UUID'nin geriye dönük uyumlu NCS standardına uygun ise 0 değerini döndürür;
+
+*name_gen()* fonksiyonu, ad alanlarında UUID'ler oluşturmak için kullanılır

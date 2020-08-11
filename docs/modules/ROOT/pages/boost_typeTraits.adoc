@@ -1,0 +1,89 @@
+== Boost.TypeTraits
+
+Boost.TypeTraits kitaplığı, bir türün özelliklerini belirlemek ve değiştirmek için gereken araçları sağlar.
+
+C + + 11'den beri, Boost.TypeTraits tarafından sağlanan bazı işlevler standart kitaplıkta bulunabilir. Bu işlevlere type_traits başlık dosyasından erişebilirsiniz. Ancak, Boost.TypeTraits ek işlevler sağlar.
+
+[source,c++]
+----
+#include <boost/type_traits.hpp>
+#include <iostream>
+
+using namespace boost;;
+
+int main()
+{
+    std::cout.setf(std::ios::boolalpha);
+    std::cout << is_integral<int>::value << '\n'; //boost::is_integral: Bir türün integral olup olmadığını kontrol eder
+    std::cout << is_floating_point<int>::value << '\n';//boost::is_floating_point:Bir türün kayan nokta sayılarını depolayıp depolamadığını kontrol eder.
+    std::cout << is_arithmetic<int>::value << '\n';//boost::is_arithmetic bir türün aritmetik işleçleri destekleyip desteklemediğini denetler.
+    std::cout << is_reference<int>::value << '\n';//boost::is_reference, bir türün referans olup olmadığını belirlemek için kullanılabilir.
+
+    std::cout<<"--------\n";
+
+    //tiplerin özelliklerini kontrol eden fonksiyonları sunar.
+    std::cout << has_plus<int>::value << '\n'; //boost::has_plus bir türün işleç operatörünü + destekleyip desteklemediğini
+    // ve aynı türdeki iki nesnenin birleştirilip birleştirilemeyeceğini denetler.
+    std::cout << has_pre_increment<int>::value << '\n';//boost::has_pre_increment, bir türün artış operatorunu destekleyip desteklemediğini denetler
+    std::cout << has_trivial_copy<int>::value << '\n';//boost::has_trivial_copy bir türde önemsiz bir kopya oluşturucu olup olmadığını kontrol eder
+    std::cout << has_virtual_destructor<int>::value << '\n';//boost::has_virtual_destructor, bir türün sanal bir yıkıcıya sahip olup olmadığını kontrol eder.
+
+    std::cout<<"--------\n";
+
+    //tip özelliklerinin nasıl değiştirilebileceğini gösterir.
+    std::cout << is_const<add_const<int>::type>::value << '\n';//boost::add_const bir türe const ekler.
+    // Tür zaten sabitse, hiçbir şey değişmez. Kod sorunsuz derlenir ve tür sabit kalır.
+    std::cout << is_same<remove_pointer<int*>::type, int>::value << '\n';
+    //boost :: remove_pointer, yıldız işaretini bir işaretçi türünden kaldırır ve işaretçinin başvurduğu türü döndürür.
+    std::cout << is_same<make_unsigned<int>::type, unsigned int>::value <<'\n';//boost::make_unsigned işareti olan bir türü, işareti olmayan bir türe dönüştürür.
+    std::cout << is_same<add_rvalue_reference<int>::type, int&&>::value <<'\n';//boost :: add_rvalue_reference, bir türü bir değer referansına dönüştürür.
+}
+----
+
+
+Ekran Çıktısı:
+
+ true
+ false
+ true
+ false
+ --------
+ true
+ true
+ true
+ false
+ --------
+ true
+ true
+ true
+ true
+
+
+
+*is_integral<int>::value* Bir türün integral olup olmadığını kontrol eder.
+
+
+*is_floating_point<int>::value* Bir türün kayan nokta sayılarını depolayıp depolamadığını kontrol eder.
+
+*is_arithmetic<int>::value* Bir türün aritmetik işleçleri destekleyip desteklemediğini denetler.
+
+*is_reference<int>::value* Bir türün referans olup olmadığını belirlemek için kullanılabilir.
+
+
+Boost.TypeTraits öğesindeki tüm işlevler, true veya false değerinde bir sonuç sağlar.
+
+is_integral int ve is_arithmetic int için sonuç true ve is_floating_point int ve is_reference int için sonuç false çıktılar. Tüm bu işlevler şablon olduğundan, çalışma zamanında hiçbir şey işlenmez. Örnek, doğru ve yanlış değerleri doğrudan kodda kullanılmış gibi çalışma zamanında davranır.
+
+
+*boost::add_const:* Bir türe const ekler. Tür zaten sabitse, hiçbir şey değişmez. Kod sorunsuz derlenir ve tür sabit kalır.
+
+*boost::remove_pointer:* Yıldız işaretini bir işaretçi türünden kaldırır ve işaretçinin başvurduğu türü döndürür.
+
+*boost::make_unsigned:* İşareti olan bir türü, işareti olmayan bir türe dönüştürür.
+
+*boost::add_rvalue_reference:* Bir türü bir değer referansına dönüştürür.
+
+
+
+
+

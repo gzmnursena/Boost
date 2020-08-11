@@ -1,0 +1,140 @@
+== Boost.Algorithm
+Boost.Algorithm , algoritmaları standart kütüphaneden algoritmalar kullanmamızı sağlar. Boost.Range'den farklı olarak, Boost.Algorithm yeni kavramlar getirmez.
+Boost.Algorithm tarafından tanımlanan algoritmalar, standart kütüphanedeki
+algoritmalara benzer. Bu algoritmaları örneklerle açıklayalım:
+
+Örneğin;
+
+[source code]
+----
+#include <boost/algorithm/cxx11/one_of.hpp>
+#include <array>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+int main()
+{
+    array<int, 6> a{{0, 5, 2, 1, 4, 3}};// 6 elemanli int dizi
+    auto predicate = [](int i){ return i == 4; };
+    cout.setf(ios::boolalpha); //Sonucların 0-1 olarak değil true-false olarak döndürülmesini sağlar.
+    cout << one_of(a.begin(), a.end(), predicate) << endl;//koşulun aralıkta sağlanıp sağlanmadığını test eder.
+    //sonucu true-false dööndürür.
+
+    /*one_of():Bir koşulun tam olarak bir kez karşılanıp karşılanmadığını test eder.
+    Test etme koşulu, bir işaret olarak geçirilir.
+    Aralıktaki herhangi bir öğenin koşulu sağlayıp sağlamadığını test eder.
+     */
+
+    cout << one_of_equal(a.begin(), a.end(), 4) << endl;
+    /*4 int değerinin başlangıç ve bitiş aralığında olup olmadığınına bakar,sonucu true-false döndürür.
+    */
+    //one_of_equal(): Elemanları eşitlik açısından test eder. if-else gibi (java-equals)
+}
+----
+
+Ekran Çıktısı:
+
+ true
+ true
+
+
+*boost::algorithm::one_of():* Bir koşulun tam olarak bir kez karşılanıp karşılanmadığını test eder.
+Test etme koşulu, bir işaret olarak geçirilir.
+Aralıktaki herhangi bir öğenin koşulu sağlayıp sağlamadığını test eder.
+
+*boost::algorithm::one_of_equal():* Elemanları eşitlik açısından test eder. if-else gibi (java-equals)
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/cxx11/iota.hpp>
+#include <boost/algorithm/cxx11/is_sorted.hpp>
+#include <boost/algorithm/cxx11/copy_if.hpp>
+#include <vector>
+#include <iterator>
+#include <iostream>
+
+using namespace boost::algorithm;
+using  namespace std;
+
+int main()
+{
+    vector<int> v;
+    iota_n(back_inserter(v), 10, 5); //vektor oluşturup sonuna sayılar üretip ekler.
+    cout.setf(ios::boolalpha);// Sonucu 0-1 olarak değilde true-false olarak döndürür.
+    cout << is_increasing(v) << endl;//üretilen sayıları sıralar true-false döndürür
+    ostream_iterator<int> out{cout, ","};
+    copy_until(v, out, [](int i){ return i > 12; });//üretilen sayıları sıralı bir biçimde ekrana yazar.
+}
+----
+
+Ekran Çıktısı:
+
+ true
+ 10,11,12,
+
+
+Boost.Algorithm kütüphanesinin boost::algorithm::iota() fonksiyonunu kullanmak için dosyanın başında *boost/algorithm/cxx11/iota.hpp* satırının olması gerekir. Bu fonksiyon sırasıyla artan sayılar üretir. Bir container'ın başlangıç ve son iki kullanımına parametre olarak alır. Kabın içindeki elemanlar daha sonra sırayla artan sayılar ile yazılır.
+
+boost::algorithm::is_increasing() ve boost::algorithm::is_sorted() kullamak için dosyanın başında  *boost/algorithm/cxx11/is_sorted.hpp* yazılır.
+
+boost::algorithm::is_increasing() ve boost::algorithm::is_sorted()
+fonksiyonlarının aynı işlevi vardır ama boost::algorithm::is_sorted() fonksiyon adını anlaşılır, sıralı biçimde yazar.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/hex.hpp>
+#include <vector>
+#include <string>
+#include <iterator>
+#include <iostream>
+
+using namespace boost::algorithm;
+using namespace std;
+
+//boost::algorithm::hex() : Karakteri onaltılık sayı sistemine çevirerek yazar.
+//boost::algorithm::unhex() : Onaltılık sistemini karakraktere çevirerek yazar.
+int main()
+{
+  vector<char> karakter{'C', '+', '+'};
+  hex(karakter, ostream_iterator<char>{cout, ""});//char dizisi onaltılık sayı sistemine çevrildi.
+  cout << endl;
+
+  string metin = "C++";
+  cout << hex(metin) << endl<< endl;//char dizisi onaltılık sayı sistemine çevrildi.
+
+
+  vector<char> karakter2{'4', '3', '2', 'b', '2', 'b'};
+  unhex(karakter2, std::ostream_iterator<char>{cout, ""});//onaltılık sistemi char dizisine çevirerek yazar
+  cout << endl;
+
+  string metin2 = "432b2b";
+  cout << unhex(metin2) << endl;//onaltılık sistemi char dizisine çevirerek yazar
+}
+----
+
+Ekran Çıktısı:
+
+ 432B2B
+ 432B2B
+ C++
+ C++
+
+
+*boost::algorithm::hex() :* Karakteri onaltılık sayı sistemine çevirerek yazar.
+
+
+*boost::algorithm::unhex() :* Onaltılık sistemini karakraktere çevirerek yazar.
+
+
+
+
+
+
+

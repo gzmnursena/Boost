@@ -1,0 +1,47 @@
+== Boost.Format
+
+Boost.Format, std::printf() işlevinin yerine geçer. std::printf(), C standardından kaynaklanır
+ve formatlanmış veri çıkışına izin verir.
+
+Boost.Format, boost/format.hpp ile tanımlanan boost::format adlı bir sınıf sağlar. std::printf() 'e benzer şekilde, biçimlendirmeyi denetlemek için özel karakterler içeren
+bir dize boost::format yapıcısına iletilir. Çıktıdaki bu özel karakterlerin yerine geçen veriler % operator işleci ile bağlanır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/format.hpp>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+   /* Boost.Format, boost/format.hpp ile tanımlanan boost::format adlı bir sınıf sağlar. std::printf() 'e benzer şekilde,
+    biçimlendirmeyi denetlemek için özel karakterler içeren bir dize boost::format yapıcısına iletilir.
+    Çıktıdaki bu özel karakterlerin yerine geçen veriler % operator işleci ile bağlanır.*/
+
+    cout << boost::format{"%1%.%2%.%3%"} % 12 % 5 % 2014 << endl; //12 % 5 % 2014  burada tanımlanan % operatoru yerine
+    //"%1%.%2%.%3%" buradaki '.' işaretini koyar
+    cout << boost::format{"%2%/%1%/%3%"} % 12 % 5 % 2014 << endl;//5/12/2014
+    cout << boost::format{"%1% %2% %1%"} %
+            boost::io::group(std::showpos, 1) % 2 << endl; // +1 2 +1 . group içerisindeki ifadeyi gruplar.
+
+    cout << boost::format{"%|1$+| %2% %1%"} % 1 % 2 << endl;//+1 2 1 . |1$+| ile 1'i gruplar
+    
+    cout << boost::format{"%2%/%1%/%3%"} % 12 % 5 % 2014 << endl;//12 % 5 % 2014 burada yer alan verilerden önce ikinci
+    //sonra birinci sonrada üçüncü verileri(%2%/%1%/%3%) yazar.
+
+    return 0;
+}
+----
+
+Ekran Çıktısı:
+
+ 12.5.2014
+ 5/12/2014
+ +1 2 +1
+ +1 2 1
+ 5/12/2014
+
+

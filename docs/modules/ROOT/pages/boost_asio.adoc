@@ -1,0 +1,173 @@
+== Boost.Asio
+
+Boost.Asio, asenkron giriş / çıkış anlamına gelir. Bu kütüphane, verilerin
+zaman uyumsuz olarak işlenmesini mümkün kılar. Asenkron, işlemler
+başlatıldığında, başlatma programının işlemin bitmesini beklemesi
+gerekmediği anlamına gelir. Bunun yerine, Boost.Asio bir işlem sona
+erdiğinde bir programı bildirir. Avantajı, diğer işlemlerin aynı anda
+gerçekleştirilebilmesidir.
+
+Boost.Thread, işlemleri aynı anda yürütmeyi mümkün kılan başka bir
+kütüphanedir. Boost.Thread ve Boost.Asio arasındaki fark, Boost.Thread ile
+bir programın içindeki kaynaklara ve Boost.Asio ile bir programın
+dışındaki kaynaklara erişmenizdir. Örneğin, zaman alıcı bir hesaplama
+yürütmesi gereken bir işlev geliştirirseniz, bu işlevi bir iş parçacığında
+çağırabilir ve başka bir CPU çekirdeğinde çalıştırabilirsiniz. Konular CPU
+çekirdeklerine erişmenizi ve bunları kullanmanızı sağlar. Programınızın
+bakış açısından, CPU çekirdekleri dahili bir kaynaktır. Harici kaynaklara
+erişmek istiyorsanız, Boost.Asio kullanırsınız.
+
+Ağ bağlantıları harici kaynaklara bir örnektir. Verilerin gönderilmesi
+veya alınması gerekiyorsa, bir ağ kartına işlemi gerçekleştirmesi
+söylenir. Bir gönderme işlemi için, ağ kartı gönderilecek verileri içeren
+bir ara belleğe bir işaretçi alır. Bir alma işlemi için ağ kartı,
+arabelleğe bir işaretçi alır ve alınan verilerle doldurmalıdır. Ağ kartı
+programınız için harici bir kaynak olduğundan, işlemleri bağımsız olarak
+yürütebilir. Programınızda yalnızca diğer işlemleri yürütmek için
+kullanabileceğiniz zaman - zaman gerekir. Boost.Asio, işlemleri eşzamanlı
+olarak yürütme yeteneklerinden yararlanarak mevcut cihazları daha verimli
+kullanmanızı sağlar.
+
+Bir ağ üzerinden veri gönderme ve alma, Boost.Asio'da eşzamansız bir işlem
+olarak uygulanır. Eşzamansız bir işlemi, hemen dönen ancak sonuçsuz bir
+işlev olarak düşünün. Sonuç daha sonra teslim edilir.
+
+İlk adımda, eşzamansız bir işlem başlatılır. İkinci adımda, eşzamansız
+işlem sona erdiğinde bir program bildirilir. Başlangıç ​​ve bitiş
+arasındaki bu ayrım, engelleme işlevlerini çağırmak zorunda kalmadan
+harici kaynaklara erişmeyi mümkün kılar.
+
+I/O Services and I/O Objects
+
+Eşzamansız veri işleme için Boost.Asio kullanan programlar I/O
+hizmetlerine ve I/O nesnelerine dayanır. I/O hizmetleri, verileri
+eşzamansız olarak işleyen işletim sistemi arabirimlerini özetler. I/O
+nesneleri, eşzamansız işlemleri başlatır. Bu iki kavram, görevleri temiz 
+bir şekilde ayırmak için gereklidir: I/O hizmetleri, işletim sistemi
+API'sine bakar ve I/O nesneleri, geliştiricilerin yapması gereken
+görevlere bakar.
+
+Boost.Asio kullanıcısı olarak normalde doğrudan I/O hizmetlerine
+bağlanmazsınız. I/O hizmetleri bir I/O hizmeti nesnesi tarafından
+yönetilir. Bir I/Ohizmeti nesnesi, I/O hizmetlerinin listelendiği bir
+kayıt defteri gibidir. Her I/O nesnesi I/O hizmetini bilir ve I/O hizmet
+nesnesi aracılığıyla I/O hizmetine erişir.
+
+Boost.Asio, bir I/O hizmet nesnesi için tek bir sınıf olan
+boost::asio::io_service'i tanımlar. Boost.Asio tabanlı her program
+boost::asio::io_service türünde bir nesne kullanır. Bu aynı zamanda
+küresel bir değişken olabilir.
+
+Boost::asio::steady_timer bir çalar saat gibidir. Çalar saat çaldığında
+bir engelleme işlevinin dönmesini beklemek yerine, programınız
+bilgilendirilir. Boost::asio::steady_timer süresinin dolmasını
+beklediğinden, harici bir kaynağa erişilmemiş gibi görünüyor. Ancak, bu
+durumda harici kaynak, işletim sisteminin bir süre dolduğunda bir programı
+bildirme yeteneğidir. Bu, bir programı yalnızca bir engelleme işlevini
+çağırmak için yeni bir iş parçacığı oluşturmaktan kurtarır.
+Boost::asio::steady_timer çok basit bir I/O nesnesi olduğundan,
+Boost.Asio'yu tanıtmak için kullanılır.
+
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <chrono>
+#include <iostream>
+
+using namespace boost::asio;
+
+int main()
+{
+    io_service ioservice;
+
+    /*boost::asio::steady_timer türünde iki nesne kullanılır.
+     timer1'deki İlk parametre ioservice G/Ç nesnesi, üç saniye sonra çalan bir  timer'dir
+    timer2'deki dört saniye sonra çalan bir timer'dir.
+
+     Her iki zaman diliminin süresi dolduktan sonra, async_wait()
+    fonksiyonuna geçirilen fonksiyon çağrılır.*/
+
+    steady_timer timer1{ioservice, std::chrono::seconds{3}};
+    timer1.async_wait([](const boost::system::error_code &ec)
+                      { std::cout << "3 sec\n"; });
+
+    steady_timer timer2{ioservice, std::chrono::seconds{4}};
+    timer2.async_wait([](const boost::system::error_code &ec)
+                      { std::cout << "4 sec\n"; });
+
+    ioservice.run();
+    /*Bu örnekteki tek I / O hizmeti nesnesinde run() fonksiyonu çağrılır.
+    Bu çağrı ile senkronize olmayan işlemleri yürüten işletim sistemi fonksiyonlarının kontrolü iletir.
+    Onların yardımıyla ilk fonksiyon üç saniye sonra ve ikinci fonksiyon dört saniye sonra çağrılır.*/
+}
+----
+
+Ekran Çıktısı:
+
+ 3 sec
+ 4 sec
+
+
+boost::asio::steady_timer türünde iki nesne kullanılır. İlk I/O nesnesi, üç saniye sonra çalan bir çalar saattir. Diğeri dört saniye sonra çalan bir çalar saat. Her iki zaman diliminin süresi dolduktan sonra, async_wait() fonksiyonuna geçirilen lambda fonksiyonu çağrılır.
+
+Bu örnekteki tek I / O hizmeti nesnesinde run() fonksiyonu çağrılır. Bu çağrı ile senkronize olmayan işlemleri yürüten işletim sistemi fonksiyonlarının kontrolü iletir. Onların yardımıyla ilk lambda fonksiyonu üç saniye sonra ve ikinci lambda fonksiyonu dört saniye sonra çağrılır.
+
+Eşzamansız işlemlerin bir engelleme fonksiyonu çağrı gerektirmesi şaşırtıcı olabilir. Ancak, bu bir sorun değildir çünkü programın çıkması engellenmelidir. run() engellemezse, main() döner ve programdan çıkar. run() fonksiyonunun geri dönmesini beklemek istemiyorsanız, yalnızca yeni bir dizide run() fonksiyonu çağırmanız gerekir.
+
+Yukarıdaki örneklerin bir süre sonra çıkmasının nedeni, bekleyen asenkron işlem yoksa run() öğesinin döndürülmesidir. Tüm alarm saatleri çaldığında, programın beklemesi gereken asenkron işlem yoktur.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <chrono>
+#include <thread>
+#include <iostream>
+
+using namespace boost::asio;
+
+int main()
+{
+  io_service ioservice;
+
+  steady_timer timer1{ioservice, std::chrono::seconds{3}};
+  timer1.async_wait([](const boost::system::error_code &ec)
+    { std::cout << "3 sec\n"; });
+
+  steady_timer timer2{ioservice, std::chrono::seconds{3}};
+  timer2.async_wait([](const boost::system::error_code &ec)
+    { std::cout << "3 sec\n"; });
+  /*her iki timer'da üç saniye sonra çalmalıdır. İki thread bulunduğundan, her iki  fonksiyon aynı anda yürütülebilir.
+   Birinci thread işleyicisi yürütülürken ikinci thread çalarsa, işleyici ikinci thread'i yürütülebilir.
+   İlk thread işleyicisi zaten geri döndüyse, I/O hizmeti nesnesi ikinci işleyiciyi yürütmek için herhangi bir thread'i kullanabilir.*/
+
+  /* Her iki zaman diliminin süresi dolduktan sonra, async_wait()
+    fonksiyonuna geçirilen fonksiyon çağrılır.*/
+
+  std::thread thread1{[&ioservice](){ ioservice.run(); }};//thread'i çağırır ve ioservice.run() fonksiyonunu çalıştırır.
+  std::thread thread2{[&ioservice](){ ioservice.run(); }};
+  /*std::thread ile main() 'de iki thread oluşturulur. run() fonksiyonu ile her bir çalışma içindeki tek I/O servisi
+   nesnesinde çağrılır. Bu, I/O hizmeti nesnesinin eşzamansız işlemler tamamlandığında her iki thread de işleyicileri yürütmesini sağlar*/
+  thread1.join();//main() ve thread()  fonksiyonlarının eşzamanlı çalışmasını sağlar
+  thread2.join();
+}
+----
+
+Ekran Çıktısı:
+
+ 3 sec
+ 3 sec
+
+
+Std::thread ile main() 'de iki thread oluşturulur. run() fonksiyonu ile her bir çalışma içindeki tek I/O servisi nesnesinde çağrılır. Bu, I/O hizmeti nesnesinin eşzamansız işlemler tamamlandığında her iki thread de işleyicileri yürütmesini sağlar.
+
+Örnekte, her iki timer'da üç saniye sonra çalmalıdır. İki thread bulunduğundan, her iki  fonksiyon aynı anda yürütülebilir. Birinci thread işleyicisi yürütülürken ikinci thread çalarsa, işleyici ikinci thread'i yürütülebilir. İlk thread işleyicisi zaten geri döndüyse, I/O hizmeti nesnesi ikinci işleyiciyi yürütmek için herhangi bir thread'i kullanabilir.
+
+Tabii ki, thread kullanmak her zaman mantıklı değildir. Örnekte, iletileri standart çıktı akışına sırayla yazamayabilir. Bunun yerine, karışık olabilirler. Aynı anda iki thread ile çalışabilen her iki işleyici de global kaynak std::cout'u paylaşır. Kesintileri önlemek için std::cout'a erişimin senkronize edilmesi gerekir. İşleyiciler eşzamanlı olarak yürütülemiyorsa thread'in avantajı kaybolur.

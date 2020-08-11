@@ -1,0 +1,109 @@
+== Boost.ScopeExit
+
+Boost.ScopeExit kütüphanesi, RAII'yi kaynağa özgü sınıflar olmadan kullanmayı mümkün kılar.
+
+Boost.ScopeExit, yerel bir fonksiyona benzeyen ancak adı olmayan bir şeyi tanımlamak için kullanılabilen BOOST_SCOPE_EXIT kullanımını sağlar.
+
+BOOST_SCOPE_EXIT kullanmak için boos /scoped_exit.hpp satırı dosyanın başına eklenmelidir.
+
+Makro için parametre listesi, dış kapsamdan blokta erişilebilir olması gereken değişkenler içerir. Değişkenler kopya ile geçirilir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/scope_exit.hpp>
+#include <iostream>
+
+
+//Boost.ScopeExit, yerel bir fonksyona benzeyen ancak adı olmayan bir şeyi tanımlamak için kullanılabilen BOOST_SCOPE_EXIT kullanımını sağlar.
+//Makro için parametre listesi, dış kapsamdan blokta erişilebilir olması gereken değişkenler içerir. Değişkenler kopya ile geçirilir.
+int *foo()
+{
+    int *i = new int{10};
+    BOOST_SCOPE_EXIT(&i)//BOOST_SCOPE_EXIT, bloğun tanımlandığı scope sona erdiğinde yürütülecek bir bloğu tanımlamak için kullanılır.
+    //BOOST_SCOPE_EXIT ile tanımlanan scope foo() fonksiyonu dönmeden hemen önce yürütülür.
+        {
+            delete i;
+            i = 0;
+        } BOOST_SCOPE_EXIT_END
+    std::cout << *i << '\n';
+    return i;
+}
+
+/*foo() fonksiyonu, int değişkeni oluşturmak için new komutunu kullanır. Değişkeni serbest bırakmak için,
+ BOOST_SCOPE_EXIT ile delete adlı bir blok tanımlanır. Örneğin, fonksiyon bir istisna nedeniyle erken dönse bile
+ bu bloğun yürütülmesi garanti edilir.*/
+
+int main()
+{
+    int *j = foo();//foo() fonksiyonu çağırılır
+    std::cout << j << '\n';//fonksiyondan dönen değer yazdırılır
+}
+----
+
+Ekran Çıktısı:
+
+ 10
+ 0x1ef1c20
+
+
+BOOST_SCOPE_EXIT, bloğun tanımlandığı scope sona erdiğinde yürütülecek bir bloğu tanımlamak için kullanılır. Örnekte, BOOST_SCOPE_EXIT ile tanımlanan scope foo() fonksiyonu dönmeden hemen önce yürütülür.
+
+BOOST_SCOPE_EXIT, kaynağa özgü sınıflar kullanmak zorunda kalmadan RAII'den faydalanmak için kullanılabilir. foo() fonksiyonu, int değişkeni oluşturmak için *new* komutunu kullanır. Değişkeni serbest bırakmak için, BOOST_SCOPE_EXIT ile *delete* adlı bir blok tanımlanır. Örneğin, fonksiyon bir istisna nedeniyle erken dönse bile bu bloğun yürütülmesi garanti edilir.  BOOST_SCOPE_EXIT akıllı bir işaretçi kadar iyidir.
+
+Bir C + + 11 geliştirme ortamı kullanıyorsanız Boost.ScopeExit'i yok sayabilirsiniz. Bu durumda, RAII'yi lambda fonksiyonları  yardımıyla kaynağa özgü sınıflar olmadan kullanabilirsiniz.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/scope_exit.hpp>
+#include <iostream>
+
+
+//Bir scope'da birden fazla scope tanımlamak için BOOST_SCOPE_EXIT kullanıldığında, bloklar ters sırada yürütülür.
+struct x
+{
+  int i;
+
+  void foo()
+  {
+    i = 10;
+    BOOST_SCOPE_EXIT(void)//BOOST_SCOPE_EXIT değişkenine herhangi bir değişken geçirilmezse, void olduğunu belirtmeniz
+    // gerekir. Parantezler boş olmamalıdır
+    {
+      std::cout << "last\n";
+    } BOOST_SCOPE_EXIT_END
+    BOOST_SCOPE_EXIT(this_)//Fonksiyondan sonra BOOST_SCOPE_EXIT kullanırsanız ve geçerli nesneye bir işaretçi iletmeniz
+    // gerekiyorsa, this_ öğesini kullanmalısınız.
+    {
+      this_->i = 20;
+      std::cout << "first\n";
+    } BOOST_SCOPE_EXIT_END
+  }
+};
+
+int main()
+{
+  x obj;//struct'tan nesne tanımlanır
+  obj.foo();//nesne ile struct'taki foo() fonksiyonu çağırılır
+  std::cout << obj.i << '\n';//nesneden dönen değerler yazdırılır
+}
+----
+
+
+Ekran Çıktısı:
+
+ first
+ last
+ 20
+
+Bir scope'da birden fazla scope tanımlamak için BOOST_SCOPE_EXIT kullanıldığında, bloklar *ters sırada* yürütülür. Örnekte gösterildiği gibi.
+
+BOOST_SCOPE_EXIT değişkenine herhangi bir değişken geçirilmezse, *void olduğunu* belirtmeniz gerekir. Parantezler boş olmamalıdır.
+
+Fonksiyondan sonra BOOST_SCOPE_EXIT kullanırsanız ve geçerli nesneye bir işaretçi iletmeniz gerekiyorsa, *this_*öğesini kullanmalısınız.
+
+

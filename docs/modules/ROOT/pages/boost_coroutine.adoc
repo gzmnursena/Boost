@@ -1,0 +1,11 @@
+== Boost.Coroutine
+
+Boost.Coroutine ile C + + 'da coroutines kullanmak mümkündür. Coroutines, coroutines için getiri anahtar kelimesini sıklıkla kullanan diğer programlama dillerinin bir özelliğidir. Bu programlama dillerinde verim, getiri gibi kullanılabilir. Ancak, verim kullanıldığında, işlev konumu hatırlar ve işlev tekrar çağrılırsa yürütme bu konumdan devam eder.
+
+C + + bir anahtar kelime getirisi tanımlamaz. Bununla birlikte, Boost.Coroutine ile işlevlerden geri dönmek ve daha sonra aynı yerden devam etmek mümkündür. Boost.Asio kütüphanesi de Boost.Coroutine kullanır ve coroutines'den faydalanır.
+
+Boost.Coroutine'in iki sürümü vardır. Bu bölümde, geçerli sürüm olan ikinci sürüm tanıtılmaktadır. Bu sürüm, Boost 1.55.0'dan beri mevcuttur ve ilk sürümün yerini almıştır.
+
+
+
+

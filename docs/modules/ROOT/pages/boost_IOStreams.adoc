@@ -1,0 +1,247 @@
+== Boost.IOStreams
+
+ 
+Bu bölümde Boost.IOStreams kütüphanesi tanıtılmaktadır. IOStreams, bilinen kitap akışını standart kitaplıktan daha küçük bileşenlere ayırır. Kütüphane iki kavramı tanımlar: veri kaynaklarını ve lavaboları açıklayan cihaz ve standart kütüphaneden arayüze dayalı olarak biçimlendirilmiş giriş / çıkış için bir arabirimi tanımlayan akış. Boost.IOStreams tarafından tanımlanan bir akış otomatik olarak bir veri kaynağına veya lavaboya bağlı değildir.
+
+Iostreams iki kavramın sayısız uygulamasını sağlar. Örneğin, bir dosyayı kısmen veya tamamen belleğe yükleyen boost::iostreams::mapped_file aygıtı vardır. Akış boost::iostreams::stream, veri okumak ve yazmak için tanıdık akış operatörleri operatörünü ve operatörünü kullanmak üzere boost::iostreams::mapped_file gibi bir cihaza bağlanabilir.
+
+Boost::iostreams::stream'e ek olarak Boost.IOStreams, veri filtreleri eklemenizi sağlayan stream boost iostreams::filtering_stream sağlar. Örneğin, GZIP biçiminde sıkıştırılmış verileri yazmak için boost::iostreams::gzip_compressor komutunu kullanabilirsiniz.
+
+Iostreams, platforma özgü nesnelere bağlanmak için de kullanılabilir. Kitaplık, bir Windows tanıtıcısına veya dosya tanımlayıcısına bağlanmak için aygıtlar sağlar. Bu şekilde, alt düzey API'lerden nesneler platformdan bağımsız C ++ kodunda kullanılabilir hale getirilebilir.
+
+Boost.IOStreams tarafından sağlanan sınıflar ve işlevler boost ::iostreams ad alanında tanımlanır. Ana başlık dosyası yok. Boost.IOStreams başlık dosyalarından daha fazlasını içerdiğinden, önceden oluşturulmalıdır. Bu önemli olabilir, çünkü Boost.IOStreams'in nasıl önceden oluşturulduğuna bağlı olarak, bazı özellikler için destek eksik olabilir.
+
+* Devices (Aygıtlar)
+* Filters
+
+= Devices (Aygıtlar)
+
+Aygıtlar, genellikle bir işlemin dışındaki nesnelere (örneğin dosyalar) okuma ve yazma erişimi sağlayan sınıflardır. Ancak, diziler gibi dahili nesnelere aygıt olarak da erişebilirsiniz.
+
+Aygıt, üye işlevi read() veya write() olan bir sınıftan başka bir şey değildir. Bir aygıt bir akışla bağlanabilir, böylece read() ve write() üye işlevlerini doğrudan kullanmak yerine biçimlendirilmiş verileri okuyabilir ve yazabilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <iostream>
+
+using namespace boost::iostreams;
+
+int main()
+{
+    char buffer[16];
+    array_sink sink{buffer}; // Elemanları diziye atar
+    stream<array_sink> os{sink}; // boost'a bağlar.
+    os << "Boost" << std::flush; // array_sink'e "Boost" yazısını atar
+    std::cout.write(buffer, 5); //ekrana "Boost" yazar
+}
+----
+
+Ekran Çıktısı:
+
+ Boost
+
+Örnekte diziye veri yazmak için boost::iostreams::array_sink aygıtını kullanır. Daha sonra, cihaz boost::iostreams::stream ile boost'a bağlanır. Ekrana veriyi yazdırır.
+
+Örneğin;
+[source,c++]
+----
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::iostreams;
+using namespace std;
+
+int main()
+{
+  char buffer[16];
+  array_sink sink{buffer};
+  stream<array_sink> os{sink};
+  os << "Boost" << endl;
+
+  array_source source{buffer};
+  stream<array_source> is{source};
+  string s;
+  is >> s;
+  cout << s << endl;
+}
+----
+
+Ekran çıktısı:
+
+ Boost
+
+
+Örnekte Boost::iostreams::array_sink ile bir diziye yazılan dize boost::iostreams::array_source ile okunur. 
+
+*Boost::iostreams::array_source, boost::iostreams::array_sink gibi kullanılır. Boost::iostreams::array_sink yalnızca yazma işlemlerini desteklerken, boost::iostreams::array_source yalnızca okumayı destekler. Boost::iostreams::array hem yazma hem de okuma işlemlerini destekler.*
+
+NOT:: Boost::iostreams::array_source ve boost::iostreams ::array_sink'in bir diziye referans alır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <vector>
+#include <string>
+#include <iostream>
+
+using namespace boost::iostreams;
+
+int main()
+{
+  std::vector<char> v;
+  back_insert_device<std::vector<char>> sink{v};
+  //boost::iostreams::array_sink yerine boost::iostreams::back_insert_device türünde bir aygıt kullanır.
+  stream<back_insert_device<std::vector<char>>> os{sink};
+  os << "Boost" << std::endl;//"Boost" yazısını okur
+
+  array_source source{v.data(), v.size()}; // Yazdırılan veri okunur.
+  stream<array_source> is{source};
+  //Vektörün başlangıcının adresi ve boyutu, boost::iostreams::array_source yapıcısına parametre olarak iletilir.
+  std::string s;
+  is >> s;////"Boost" yazısını dosyaya yazdırır
+  std::cout << s << '\n';//
+}
+----
+
+Ekran Çıktısı:
+
+ Boost
+ 
+Örneğin;
+
+[source,c++]
+----
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <iostream>
+
+using namespace boost::iostreams;
+using namespace std;
+
+int main()
+{
+    //dosyaları okumak için boost::iostreams::file_source  kullanılır.
+  file_source file{"main.cpp"};  //file_source'e parametre olarakdosyanın yolu verilir.
+  if (file.is_open()) //dosyanın açılıp açılamadığını test eder.
+  {
+    stream<file_source> is{file}; // dosyayı okur.
+    cout << is.rdbuf() << endl;// okunan dosyayı yazar
+    file.close(); //açılan dosyayı kapatır
+  } else
+      cout<< "Dosya açılamıyor"<< endl;
+}
+----
+
+Ekran Çıktısı olarak main.cpp sayfasındaki kodları yazar.
+
+
+= Filters
+
+Cihazların yanı sıra Boost.IOStreams, cihazlardan okunan veya cihazlara yazılan verileri filtrelemek için cihazların önünde çalışan filtreler de sağlar. Aşağıdaki örneklerde boost::iostreams::filtering_istream ve boost::iostreams::filtering_ostream kullanılır. Filtreleri desteklemeyen boost ::iostreams::stream'in yerini alıyorlar.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/regex.hpp>
+#include <boost/regex.hpp>
+#include <iostream>
+
+using namespace boost::iostreams;
+using  namespace std;
+
+int main()
+{
+    char buffer[16];
+    array_sink sink{buffer}; // diziye verileri yazar
+    filtering_ostream os;
+    os.push(regex_filter{boost::regex{"Bo+st"}, "C++"}); //Boost ve C++ ifadelerinin yerlerini değiştirir
+    os.push(sink); // karakterleri diziye ekler
+    os << "Boost" << std::flush;
+    os.pop(); // yazdıktan sonra karakterleri diziden kaldırır
+    cout.write(buffer, 3); // ekrana yazar
+}
+----
+
+Örnekte boost::regex kullanıldığı için CMakeLists.txt sayfasını aşağıdaki gibi düzenlemek gerekir:
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample_6)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "~/home/yapbenzet/Documents/boost_1_71_0/")
+
+find_package(Boost 1.7 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(sample_6 main.cpp)
+
+target_link_libraries(sample_6  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+
+ C++
+ 
+Örneğin;
+
+[source,c++]
+----
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/counter.hpp>
+#include <iostream>
+
+using namespace boost::iostreams;
+using  namespace std;
+
+/* Örnekte karakterleri ve satırları sayan boost::iostreams::counter filtresini kullanılır.
+Bu sınıf  characters() ve lines() fonksiyonlarını sağlar.*/
+int main()
+{
+    char buffer[16];
+    array_sink sink{buffer};
+    filtering_ostream os;
+    os.push(counter{});//push ile  filtering_ostream'e yazdırılır
+    os.push(sink);
+    os << "Boost" << std::flush;//filtering_ostream'e yazdırılan değerleri ekrana yazar
+    os.pop();//filtering_ostream'de yazan değerleri siler
+    counter *c = os.component<counter>(0);//characters() ve lines() fonksiyonları fonksiyonlarını kullanmak için kullanılır
+    cout << c->characters() <<  endl;//karakterleri sayar
+    cout << c->lines() << endl;//satırları sayar
+}
+----
+
+Ekran Çıktısı:
+ 5
+ 0
+
+
+
+
+ 
+
+ 
+ 
+
+

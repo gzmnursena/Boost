@@ -1,0 +1,250 @@
+== Boost.Range
+
+Boost.Range , ilk bakışta standart kütüphane tarafından sağlananlara benzer algoritmalar sağlayan bir
+kütüphanedir. Örneğin, std::copy() aynı şeyi yapan boost::copy() işlevini bulacaksınız. Ancak, std::copy()
+iki parametre beklerken, boost::copy() bir aralık bekler.
+
+
+== Algorithm
+
+You can think of a range as two iterators that refer to the beginning and end of a group of elements that you can iterate over. Because all containers support iterators, every container can be thought of as a range. Since all algorithms from Boost.Range expect a range as a first parameter, a container like std::vector can be passed directly. You don’t have to call begin() and end() and then pass two iterators separately. This protects you from mistakes such as passing the begin and end iterator in the wrong order or passing iterators that belong to two different containers.
+
+Aşağıdaki örneklerle bu konuyu açıklayalım.
+
+Örnek-1:
+[source,c++]
+----
+#include <boost/range/algorithm.hpp>
+#include <array>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+  array<int, 6> dizi{{0, 1, 0, 1, 0, 1}}; //6 elemanli dizi oluşturur
+  cout << boost::count(dizi, 0) << endl; // dizinin eleman sayısını boost::count ile ekrana yazar
+}
+----
+
+Ekran Çıktısı: 3
+
+Bu örnekte boost::count() algoritması kullanılmış ve
+dosyanın başına *boost/range/algorithm.hpp* tanımlanmıştır.
+
+Boost.Range'ın tüm algoritmaları, bir aralık olması için ilk parametre gerektirir.Container aralık olduğu için boost::count() türüne doğrudan std::array türünde bir nesne iletilebilir.Boost::count(), std::count() öğesine eşdeğer olduğundan, aralıktaki öğelerin karşılaştırılacağı değeri iletmeniz gerekir.
+
+
+Örnek-2:
+
+[source,c++]
+----
+#include <boost/range/algorithm.hpp>
+#include <boost/range/numeric.hpp>
+#include <array>
+#include <iterator>
+#include <iostream>
+
+using  namespace std;
+
+int main()
+{
+    array<int, 6> dizi{{0, 1, 2, 3, 4, 5}};//6 elemanli dizi oluşturur
+    boost::random_shuffle(dizi); //Dizinin elemanlarının sırasını rastgele değiştirir
+    boost::copy(dizi, ostream_iterator<int>{std::cout, ","});
+    /*Boost :: copy (), std :: copy () gibi çalışır
+     boost::copy ile dizinin elemanlarını kopyalayarak arada ',' ile ekrana yazdırır*/
+
+    cout << endl << *boost::max_element(dizi) << endl;
+   // boost::max_element() , std::max_element() gibi çalışır, en büyük numaralı öğeye bir yineleyici döndürür
+
+    cout << boost::accumulate(dizi, 2) << endl;
+}
+----
+
+boost :: copy (), std :: copy () gibi çalışır. boost :: max_element () ve boost :: accumulate (), standart kitaplıktaki aynı adlı algoritmalar gibi çalışır.
+
+
+Örnek-3:
+
+[source,c++]
+----
+#include <boost/range/algorithm_ext.hpp>
+#include <array>
+#include <deque>
+#include <iterator>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+  array<int, 6> dizi{{0, 1, 2, 3, 4, 5}}; //6 elemanli dizi oluşturur
+  cout << std::boolalpha << boost::is_sorted(dizi) << endl; /*bir dizideki elemanların sıralanıp sıralanmadığını kontrol eder.
+  Ekrana std::boolalpha ile yazdırdığımız için true döndürür.*/
+
+  deque<int> deq;
+  boost::push_back(deq, dizi); // dizideki elemanları verilen sıra ile deq 'in sonuna ekler
+  boost::remove_erase(deq, 2); // deq'ın 2. elemanını siler.
+  boost::copy_n(deq, 3, std::ostream_iterator<int>{std::cout, ","}); /* boost::copy_n ile 2. parametrede verilen
+  eleman sayısı kadar dizi elemanını kopyalar ve yazdırır.*/
+}
+----
+Ekran Çıktısı:
+ 
+ true
+ 0,1,3,
+
+
+Örnekte kullanılan algoritmalar, *boost/range/algorithm_ext.hpp* başlık dosyası gerektirir. Bu başlık dosyası, standart kitaplıkta karşılığı olmayan algoritmalara erişim sağlar.
+
+*boost::is_sorted()* bir dizideki elemanların sıralanıp sıralanmadığını kontrol eder. Örnekte, boost::is_sorted(), *dizi* sıralandığı için *true* değerini döndürür.
+
+*boost::push_back()* ilk parametre olarak bir container ve ikinci parametre olarak bir aralık bekler. Aralıktaki tüm elemanlar, bu üye işlevi kullanılarak aralıkta belirtilen sırayla diziye eklenir. *deq* boş başladığından, boost::push_back() çağrısından sonra aynı sırayla a ile aynı sayıları içerecektir.
+
+*boost::copy_n()*, *boost::copy()* işlevine benzer, ancak yalnızca ikinci parametresinde değer kadar elemanı kopyalar. 
+
+
+== Adaptors (Bağdaştırıcılar)
+
+Standart kütüphane, yüklemi aktarabileceğiniz birkaç algoritma sağlar. Örneğin, std::count_if() öğesine iletilen koşul hangi öğelerin sayılacağını belirler. Boost.Range benzer işlevi boost::count_if() sağlar. Bununla birlikte, bu algoritma yalnızca tamlık için sağlanır, çünkü Boost.Range, tahminleri algoritmalar yapan adaptörler sağlar.
+
+Bağdaştırıcıları filtre olarak düşünebilirsiniz. Başka bir aralığa göre yeni bir aralık döndürürler. Verilerin mutlaka kopyalanması gerekmez. Bir aralık yalnızca bir çift yineleyici olduğundan, bir bağdaştırıcı yeni bir çift döndürür. Çift yine de orijinal aralıkta yineleme yapmak için kullanılabilir, ancak örneğin belirli öğeleri atlayabilir. Böyle bir adaptörle boost::count() kullanılıyorsa, boost::count_if() artık gerekli değildir. Algoritmaların, tahminlerle veya tahminler olmadan çağrılabilmeleri için birden çok kez tanımlanması gerekmez.
+
+Algoritmalar ve bağdaştırıcılar arasındaki fark, algoritmaların bir aralık ve süreç verileri üzerinde yinelenmesi, bağdaştırıcıların da yinelemenin hangi öğeleri döndüreceğini belirleyen yeni bir aralık - yeni yineleyiciler - döndürmesidir. Ancak, yineleme yapılmaz. Önce bir algoritma çağrılmalıdır
+
+
+Örnek-4:
+
+[source,c++]
+----
+#include <boost/range/algorithm.hpp>
+#include <boost/range/adaptors.hpp>
+#include <array>
+#include <iterator>
+#include <iostream>
+
+int main()
+{
+  std::array<int, 6> a{{0, 5, 2, 1, 3, 4}};
+  boost::copy(boost::adaptors::filter(a, [](int i){ return i > 2; }),
+    std::ostream_iterator<int>{std::cout, ","});
+    
+/*boost::adapters::filter(), ilk parametre olarak filtrelenecek bir aralık ve ikinci parametre olarak
+bir koşul bekler. Örnekteki koşul, 2'den büyük olmayan aralıktaki tüm sayıları kaldırır.*/
+}
+----
+
+Ekran Çıktısı:
+
+ 5,3,4,
+
+Örnekte, aralıkları filtreleyebilen bir adaptör kullanır. Gördüğünüz gibi
+adaptör sadece bir işlevdir. boost::adapters::filter(), ilk parametre olarak
+filtrelenecek bir aralık ve ikinci parametre olarak bir koşul bekler. Örnekteki
+koşul, 2'den büyük olmayan aralıktaki tüm sayıları kaldırır.
+
+boost::adapters::filter(), a aralığını değiştirmez, yeni bir aralık döndürür. Bir aralık bir çift yineleyiciden çok farklı olmadığından, yeni aralık a. Ancak, yeni aralık için yineleyiciler 2'den küçük veya eşit tüm sayıları atlar.
+
+
+Örnek-5:
+
+[source,c++]
+----
+#include <boost/range/algorithm.hpp>
+#include <boost/range/adaptors.hpp>
+#include <array>
+#include <map>
+#include <string>
+#include <utility>
+#include <iterator>
+#include <iostream>
+
+int main()
+{
+    std::array<int, 3> dizi{{0, 1, 2}};
+    std::map<std::string, int*> map;
+    map.insert(std::make_pair("a", &dizi[0]));
+    map.insert(std::make_pair("b", &dizi[1]));
+    map.insert(std::make_pair("c", &dizi[2]));
+
+    boost::copy(boost::adaptors::keys(map),
+    std::ostream_iterator<std::string>{std::cout, ","});
+    boost::copy(boost::adaptors::indirect(boost::adaptors::values(map)),
+    std::ostream_iterator<int>{std::cout, ","});
+/*Örnekte std::map türündeki bir contains'te anahtarlara ve değerlere erişmek için
+ boost::adapters::keys() ve boost::adapters::values() olmak üzere iki bağdaştırıcı kullanır.
+ map işaretçileri değerlerin yerine yazdırılacak değerlere kaydettiğinden, boost::adapters::values() tarafından
+ döndürülen aralık boost::adapters::indirect() öğesine aktarılır. Bu bağdaştırıcı, bir aralık işaretçilerden
+ oluştuğunda her zaman kullanılabilir*/
+}
+----
+
+Ekran Çıktısı:
+
+ a,b,c,0,1,2,
+
+Örnekte std::map türündeki bir contains'te anahtarlara ve değerlere erişmek için boost::adapters::keys() ve boost::adapters::values() olmak üzere iki bağdaştırıcı kullanır. Ayrıca adaptörlerin nasıl yuvalanabileceğini gösterir.
+
+map işaretçileri değerlerin yerine yazdırılacak değerlere kaydettiğinden, boost::adapters::values() tarafından döndürülen aralık boost::adapters::indirect() öğesine aktarılır. Bu bağdaştırıcı, bir aralık işaretçilerden oluştuğunda her zaman kullanılabilir, ancak yineleme, işaretçilerin belirttiği değerleri döndürmelidir. Bu nedenle çıktıya a, b, c, 0,1,2 yazar.
+
+
+Örnek-5:
+
+[source,c++]
+----
+#include <boost/range/algorithm.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/regex.hpp>
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+  string metin = "The Boost C++ Libraries";
+  boost::regex expr{"[\\w+]+"};
+  boost::copy(boost::adaptors::tokenize(metin, expr, 0,
+  boost::regex_constants::match_default),
+  std::ostream_iterator<std::string>{std::cout, ","});
+}
+----
+
+boost::regex expr ve boost::regex_constants fonksiyonlarını kullandığımız için CMakeLists.txt'yi aşağıdaki şekilde güncellememiz gerekir.
+
+CMakeLists.txt
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(adaptors-3)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(BOOST_ROOT "/home/asli/Downloads/boost_1_71_0/")
+
+find_package(Boost 1.71.0 COMPONENTS system filesystem regex REQUIRED)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif()
+
+
+include_directories(${Boost_INCLUDE_DIRS})
+
+add_executable(adaptors-3 main.cpp)
+
+target_link_libraries(adaptors-3  ${Boost_LIBRARIES})
+----
+
+Ekran Çıktısı:
+
+ _Boost_Libraries_
+ Libraries Boost 
+ 
+
+
+
+
+

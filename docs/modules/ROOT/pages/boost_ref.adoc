@@ -1,0 +1,46 @@
+== Boost.Ref
+
+Boost.Ref kütüphanesi boost/ref.hpp başlık dosyasında boost::ref() ve boost::cref() olmak üzere iki fonksiyon sağlar. Örneğin, başvuru ile parametreleri bekleyen bir fonksiyon için std::bind() kullanırsanız yararlı olurlar. Std::bind() parametreleri değere göre aldığından, referanslarla açıkça ilgilenmeniz gerekir.
+
+Boost.Ref, C + + 11'deki standart kütüphaneye eklendi; burada std::ref() ve std::cref() işlevlerini başlık dosyasında işlevsel olarak bulabilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/ref.hpp>
+#include <vector>
+#include <algorithm>
+#include <functional>
+#include <iostream>
+
+void print(std::ostream &os, int i)
+{
+    os << i << std::endl;
+}
+
+int main()
+{
+    std::vector<int> vektor{1, 3, 2};
+    std::for_each(vektor.begin(), vektor.end(),
+                  std::bind(print, boost::ref(std::cout), std::placeholders::_1)); //vektor ekrana yazdirilir.
+
+    /*Print () iki parametre beklediğinden - bir çıkış akışı ve yazılacak sayı - std :: bind () kullanılır.
+Std :: bind () ile print () öğesine iletilen ilk parametre std :: cout şeklindedir. Ancak, print() fonksiyonu bir çıktı akışına başvuru
+beklerken std :: bind () parametreleri değere göre iletir. Bu nedenle, std :: cout'u sarmak için boost :: ref () kullanılır.
+Boost :: ref (), kendisine iletilen nesneye başvuru içeren bir proxy nesnesi döndürür. Bu, std :: bind () tüm parametreleri
+değere göre alsa bile, std :: cout'a bir referans iletmeyi mümkün kılar.*/
+}
+
+
+----
+
+Ekran Çıktısı:
+
+ 1
+ 3
+ 2
+
+
+boost::cref() fonksiyon şablonu bir const referansı iletmenizi sağlar.
+

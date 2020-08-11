@@ -1,0 +1,60 @@
+== Boost.Variant
+
+Boost.Variant, union'a benzeyen boost::variant adlı bir sınıf sağlar. Bir boost::variant değişkeninde farklı türdeki değerleri saklayabilirsiniz. Herhangi bir noktada sadece bir değer saklanabilir. Yeni bir değer atandığında, eski değerin üzerine yazılır. Ancak, yeni değerin eski değerden farklı bir türü olabilir. Tek gereksinim, türlerin boost::variant için şablon parametreleri olarak geçirilmiş olması gerektiğinden boost::variant değişkeni tarafından bilinir.
+
+boost::variant her türü destekler. Örneğin, bir  std::string bir boost::variant değişkeninde saklamak mümkündür (C + + 11'den önce birleşmeyle mümkün olmayan bir şey).  Artık bir birlik bir std::string içerebilir. Bir std::string yeni yerleşim ile başlatılmalı ve yıkıcıya açık bir çağrı ile yok edilmesi gerektiğinden, bir C + + 11 geliştirme ortamında bile boost::variant kullanmak mantıklı olabilir.
+
+boost::variant, boost/variant.hpp satırı ile dosyanın başında tanımlanır. Boost::variant bir şablon olduğundan, en az bir parametre belirtilmelidir. Bir veya daha fazla şablon parametresi desteklenen türleri belirtir. 
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/variant.hpp>
+#include <string>
+#include <iostream>
+
+struct output : public boost::static_visitor<>
+{
+    template <typename T>
+    void operator()(T t) const { std::cout << t << '\n'; }
+};
+
+int main()
+{
+    boost::variant<double, char, std::string> v;//v değişkeni  double, char veya std::string türündeki değerleri saklayabilir.
+    // Ancak, v'ye int türünde bir değer atamayı denerseniz, sonuçta oluşan kod derlenmez hata alınır
+    v = 3.14;
+    v=21.2;
+    std::cout << boost::get<double>(v) << '\n';//v'nin kayıtlı değerlerini görüntülemek için, boost::get() fonksiyonu kullanılır
+    std::cout << v << '\n';//değer atandıktan hemen sonra bu şekilde yazarsak en son atanan değer tipindeki veriyi yazar
+    v = 'A';
+    std::cout << boost::get<char>(v) << '\n';
+    v = "Boost";
+    std::cout << boost::get<std::string>(v) << '\n';
+
+    std::cout<<"----\n";
+    boost::variant<double, char, std::string> v2;
+    v2 = 3.14;
+    boost::apply_visitor(output{}, v2);//boost::apply_visitor fonksiyonu doğru işlecin otomatik olarak çağrır.
+    v2 = 'A';
+    boost::apply_visitor(output{}, v2);
+    v2 = "Boost";
+    boost::apply_visitor(output{}, v2);
+}
+----
+
+Ekran Çıktısı:
+
+ 21.2
+ 21.2
+ A
+ Boost
+ ----
+ 3.14
+ A
+ Boost
+
+Örnekte v, double, char veya std::string türündeki değerleri saklayabilir. Ancak, v'ye int türünde bir değer atamayı denerseniz, sonuçta oluşan kod derlenmez.
+

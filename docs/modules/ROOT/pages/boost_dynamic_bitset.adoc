@@ -1,0 +1,68 @@
+= Boost.DynamicBitset
+
+Boost.DynamicBitset kütüphanesi, std::bitset gibi kullanılan boost::dynamic_bitset sınıfını sağlar. Farkları std::bitset için bit sayısının derleme zamanında belirtilmesi gerekir, boost::dynamic_bitset için bit sayısının ise çalışma zamanında belirtilmesi gerekir.
+
+Boost::dynamic_bitset kullanmak için boost/dynamic_bitset.hpp satırını dosya başına eklemek gerekir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/dynamic_bitset.hpp>
+#include <iostream>
+
+int main()
+{
+    boost::dynamic_bitset<> db{3, 4};
+    //boost::dynamic_bitset 'den üretilen db nesnesi ile yapıcı 3 bit ile db oluşturur. İkinci parametre bitleri başlatır; bu durumda, 4 sayısı en önemli biti (en soldaki bit) başlatır.
+
+    db.push_back(true);//push_back(): en önemli bit olacak başka bir bit ekler
+    //burada push_back() fonksiyonunu çağırmak  db'nin 4 bit içermesine neden olur ve bunlardan en önemli iki bit ayarlanır.
+    // Bu nedenle, db 12 sayısını saklar.
+
+    std::cout.setf(std::ios::boolalpha);//sonucun 0-1 olarak değilde true-false olarak döndürülmesini sağlar.
+    std::cout << db.size() << '\n';//Ayarlanmış bit sayısını döndürür. =4
+    std::cout << db.count() << '\n';//Bit sayısını döndürür.  =2
+    std::cout << db.any() << '\n';//en az bir bit ayarlanmışsa any() fonksiyonu true değerini döndürür =true
+    std::cout << db.none() << '\n';// bit ayarlanmamışsa none() fonksiyonu true değerini döndürür.  =false
+
+    std::cout << db[0].flip() << '\n';//true //flip() fonksiyonu ile biti değiştirir.
+    std::cout << ~db[3] << '\n';//false  //~ : tersini alır
+    std::cout << db << '\n';//1101  //db sayısının ikilik tabandaki karşılığını yazar
+}
+----
+
+
+Ekran Çıktısı:
+
+ 4
+ 2
+ true
+ false
+ true
+ false
+ 1101
+
+
+Boost::dynamic_bitset, somutlaştırıldığında şablon parametresi gerektirmeyen bir şablondur; bu durumda varsayılan türler kullanılır. Daha önemlisi kurucuya iletilen parametrelerdir. Yukarıdaki örnekte, yapıcı 3 bit ile db oluşturur. İkinci parametre bitleri başlatır; bu durumda, 4 sayısı en önemli biti (en soldaki bit) başlatır.
+
+Boost::dynamic_bitset türündeki bir nesnenin içindeki bit sayısı her zaman değiştirilebilir. *push_back()* fonksiyonu, en önemli bit olacak başka bir bit ekler. Örnekteki push_back() fonksiyonunu çağırmak, db'nin 4 bit içermesine neden olur ve bunlardan en önemli iki bit ayarlanır. Bu nedenle, db 12 sayısını saklar.
+
+*resize() :* İletilen parametreye bağlı olarak bitler eklenir veya kaldırılır. resize() fonksiyonunu çağırarak bit sayısını azaltabilirsiniz
+
+Boost::dynamic_bitset, verileri sorgulamak ve tek tek bitlere erişmek için fonksiyon sağlar.
+
+*size() :* Ayarlanmış bit sayısını döndürür.
+
+*count() :* Bit sayısını döndürür.
+
+En az bir bit ayarlanmışsa *any()* fonksiyonu true değerini döndürür ve bit ayarlanmamışsa none() fonksiyonu true değerini döndürür.
+
+Tek tek bitlere erişmek için dizi syntax'ı kullanılır.
+İlgili biti temsil eden ve onu değiştirmek için fonksiyon sağlayan bir iç sınıfa başvuru döndürülür.
+Örneğin, *flip()* fonksiyonu ile biti değiştirir.
+*~* gibi bitsel operatörler de mevcuttur.
+Genel olarak, boost::dynamic_bitset sınıfı, std::bitset ile aynı bit manipülasyon fonksiyonlarını sunar.
+
+

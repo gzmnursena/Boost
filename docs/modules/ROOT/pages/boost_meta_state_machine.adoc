@@ -1,0 +1,81 @@
+== Boost.MetaStateMachine
+
+Durum makinelerini tanımlamak için Boost.MetaStateMachine kullanılır. Durum makineleri nesneleri kendi durumları aracılığıyla tanımlar. Hangi durumların var olduğunu ve durumlar arasında hangi geçişlerin mümkün olduğunu tanımlarlar.
+
+Boost.MetaStateMachine durum makinelerini tanımlamak için üç farklı yol sunar. Durum makinesi oluşturmak için yazmanız gereken kod, ön uca bağlıdır.
+
+Temel ön uç veya işlev ön ucuyla giderseniz, durum makinelerini geleneksel şekilde tanımlarsınız: sınıflar oluşturur, Boost.MetaStateMachine tarafından sağlanan diğer sınıflardan türetirsiniz, gerekli değişkenler tanımlanır. Temel ön uç ile fonksiyon ön ucu arasındaki temel fark, temel ön ucun fonksiyon işaretçileri beklerken, fonksiyon ön ucu işlev nesnelerini kullanmanızı sağlar.
+
+Üçüncü kullanıcı arabirimi eUML olarak adlandırılır ve etki alanına özgü bir dili temel alır. Bu ön uç, bir UML durum makinesinin tanımlarını yeniden kullanarak durum makinelerinin tanımlanmasını mümkün kılar. UML'yi bilen geliştiriciler, tanımları bir UML davranış diyagramından C ++ koduna kopyalayabilir. UML tanımlarını C ++ koduna çevirmenize gerek yoktur.
+
+EUML, bu kullanıcı arabirimiyle kullanmanız gereken bir dizi makroyu temel alır. Makroların avantajı, Boost.MetaStateMachine tarafından sağlanan birçok sınıfla doğrudan çalışmanıza gerek kalmamasıdır. Hangi makroları kullanacağınızı bilmeniz yeterlidir. Bu, durum makinenizi temel ön uç veya fonksiyon ön uç ile gerçekleşebilecek bir sınıftan türetmeyi unutamayacağınız anlamına gelir. Bu bölümde eUML ile Boost.MetaStateMachine tanıtılmaktadır.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/msm/front/euml/euml.hpp>
+#include <boost/msm/front/euml/state_grammar.hpp>
+#include <boost/msm/back/state_machine.hpp>
+#include <iostream>
+
+namespace msm = boost::msm;
+using namespace boost::msm::front::euml;
+
+/* Bir lambanın tam olarak iki durumu vardır. Açık veya kapalı. Kapalıysa, açılabilir. Açıksa, kapatılabilir.
+ Her durumdan diğer durumlara geçmek mümkündür. Bu örnekte böyle bir durum kullanılmıştır.*/
+
+/*bir lambanın durum makinesini tanımlamak için eUML ön ucunu kullanır.
+ Boost.MetaStateMachine'ın ana başlık dosyası yok. Bu nedenle, gerekli başlık dosyaları tek tek dahil edilmelidir.
+ Boost / msm / front / euml / euml.hpp ve boost / msm / front / euml / state_grammar.hpp eUML'ya erişim sağlar.
+ Bir durum makinesini ön uçtan arka uçtan bir durum makinesine bağlamak için boost / msm / back / state_machine.hpp gereklidir.
+ Ön uçlar durum makinelerini tanımlamak için çeşitli olanaklar sağlarken, bir durum makinesinin gerçek uygulaması arka uçta bulunur.
+ Boost.MetaStateMachine yalnızca bir arka uç içerdiğinden, bir uygulama seçmenize gerek yoktur.*/
+
+BOOST_MSM_EUML_STATE((), Off)//kapalı
+BOOST_MSM_EUML_STATE((), On)//açık
+
+//Durumlar arasında geçiş yapmak için olaylar gereklidir. Olaylar, olayın adını tek parametre olarak bekleyen
+// BOOST_MSM_EUML_EVENT ile tanımlanır.
+BOOST_MSM_EUML_EVENT(press)
+
+
+//Gerekli durumlar ve olaylar tanımlandığında, bir geçiş tablosu oluşturmak için BOOST_MSM_EUML_TRANSITION_TABLE kullanılır.
+// Bu tablolar, durumlar arasındaki hangi geçişleri ve hangi olayların hangi durum geçişlerini tetiklediğini tanımlar.
+BOOST_MSM_EUML_TRANSITION_TABLE((
+  Off + press == On,
+  On + press == Off
+), light_transition_table)
+//BOOST_MSM_EUML_TRANSITION_TABLE iki parametre alır. İlk parametre geçiş tablosunu tanımlar,
+// ikincisi geçiş tablosunun adıdır. İlk parametrenin sözdizimi, durumların ve olayların birbiriyle ilişkisini tanımayı
+// kolaylaştırmak için tasarlanmıştır. Örneğin, Off + press == On Açık, Kapalı durumundaki makinenin olay tuşuna basıldığında
+// Açık durumuna geçtiği anlamına gelir.
+
+
+//Geçiş tablosu oluşturulduktan sonra durum makinesi BOOST_MSM_EUML_DECLARE_STATE_MACHINE ile tanımlanır.
+// İkinci parametre yine daha basit olanıdır: durum makinesinin adını ayarlar.
+BOOST_MSM_EUML_DECLARE_STATE_MACHINE(
+(light_transition_table, init_ << Off),
+light_state_machine)
+
+int main()
+{
+  msm::back::state_machine<light_state_machine> light;
+  std::cout << *light.current_state() << '\n';
+  light.process_event(press);
+  //Durum makineleri olayları işlemek için process_event() fonksiyonunu sağlar.
+  //process_event() fonksiyonuna bir olay iletirseniz, durum makineleri geçiş tablosuna bağlı olarak durumunu değiştirir.
+  std::cout << *light.current_state() << '\n';//durumu yazdırır.
+  light.process_event(press);
+  std::cout << *light.current_state() << '\n';
+}
+----
+
+Ekran Çıktısı:
+
+ 0
+ 1
+ 0
+
+
+

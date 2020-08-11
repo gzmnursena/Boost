@@ -1,0 +1,79 @@
+== Boost.Xpressive 
+
+Xpressive düzenli ifade şablon kütüphanesidir. Normal ifadeler (regex'ler) çalışma zamanında dinamik olarak ayrıştırılan dizeler (dinamik regex'ler) veya derleme zamanında (statik regex'ler) ayrıştırılan ifade şablonları olarak yazılabilir.
+Dinamik regex'ler, kullanıcıdan çalışma zamanında giriş olarak kabul edilebileceği veya
+bir başlatma dosyasından okunabileceği avantajına sahiptir. Statik regex'lerin çeşitli
+avantajları vardır. Dizeler yerine C ++ ifadeleri oldukları için derleme zamanında sözdizimi
+denetlenebilirler. Ayrıca, programınızdaki herhangi bir yerdeki kod ve verilere de doğal olarak
+başvurabilirler ve size regex eşleşmesinden kodunuzu geri çağırma olanağı sunarlar.
+Son olarak, statik olarak bağlı olduklarından, derleyici statik regex'ler için daha hızlı kod
+üretebilir.
+
+
+Boost.Xpressive, Boost.Repressx ve Boost.Regex ile aynı işlevleri sağlarlar.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/xpressive/xpressive.hpp>
+#include <string>
+#include <iostream>
+
+using namespace boost::xpressive;
+using namespace std;
+
+int main()
+{
+    string metin = "Boost Libraries";
+    sregex expr = sregex::compile("\\w+\\s\\w+");//string tipindeki değişkeni boost'ta tanımlamak için kullanılır
+    cout << boolalpha << regex_match(metin, expr) << endl; // metin ve expr değişkenlerini karşılaştırır.
+    // Sonucu boolalpha'dan dolayı true/false döndürür.
+
+    const char *c = "Boost Libraries";
+    cregex expr2 = cregex::compile("\\w+\\s\\w+");//const char * tipindeki değişkeni boost'ta tanımlamak için kullanılır
+    cout << boolalpha << regex_match(c, expr2) << endl;//const tipindeki c değişkeni ile expr2 değişkenini karşılaştırır.
+    // Sonucu boolalpha'dan dolayı true/false döndürür.
+
+    string metin2 = "Boost Libraries";
+    sregex expr3 = +_w >> _s >> +_w;
+    cout << boolalpha << regex_match(metin2, expr3) << endl;// metin2 ve expr3 değişkenlerini karşılaştırır.
+    // Sonucu boolalpha'dan dolayı true/false döndürür.
+}
+----
+
+CMakeLists.txt
+
+[source,c++]
+----
+cmake_minimum_required(VERSION 3.15)
+project(sample1)
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_executable(sample1 main.cpp)
+----
+
+Ekran Çıktısı:
+
+ true
+ true
+ true
+ 
+ 
+ 
+Boost.Xpressive temel olarak Boost.Xpressive ad alanında
+tanımlanmış olmaları dışında Boost.Regex ile aynı işlevleri sağlar. 
+
+*boost::xpressive::regex_match (): * dizeleri karşılaştırır.
+
+*boost::xpressive::regex_search (): * dizelerde arama yapar.
+
+*boost::xpressive::regex_replace (): * dizelerdeki karakterlerin yerini alır.
+
+Ancak, Boost.Xpressive ve Boost.Regex arasında temel bir fark vardır. Boost.Xpressive içindeki normal ifadenin türü, aranan dizenin türüne bağlıdır. Örnekteki std::dizesine dayandığından, normal ifadenin türü boost::xpressive::sregex olmalıdır.
+
+
+
+
+

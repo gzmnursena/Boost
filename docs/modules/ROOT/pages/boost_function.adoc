@@ -1,0 +1,42 @@
+== Boost.Function
+
+Boost.Function, işlev işaretleyicilerini kapsüllemek için boost::function adlı bir sınıf sağlar. Boost/function.hpp dosyasında tanımlanmıştır.
+
+C + + 11'i destekleyen bir geliştirme ortamında çalışıyorsanız, işlevsel başlık dosyasından std:: işlevine erişebilirsiniz. Bu durumda boost::function ve std::function eşdeğer olduğu için Boost.Function öğesini yoksayabilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/function.hpp>
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+
+using namespace std;
+int main()
+{
+    boost::function<int(const char*)> foksiyon = std::atoi; // fonksiyona atoi(integer'a çevir) komutunu verir
+    cout << foksiyon("42") << endl;// string olan 42 değerini int'e çevirerek yazdirir
+    foksiyon = std::strlen;//fonksiyona string'in uzunluğu komutunu verir
+    cout << foksiyon("42") << endl;// string olan 42 değerinin uzunluğunu yazdırır
+
+    try
+    {
+        boost::function<int(const char*)> f;
+        f("");
+    }
+    catch (boost::bad_function_call &ex) //try-catch ile fonksiyonun boş oldugunun hatasını verir
+    {
+        std::cerr << ex.what() << endl;
+    }
+}
+----
+
+Ekran Çıktısı:
+
+ 42
+ 2
+ call to empty boost::function
+ 
+ 

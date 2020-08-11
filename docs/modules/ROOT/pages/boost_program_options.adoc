@@ -1,0 +1,112 @@
+== Boost.ProgramOptions
+
+Boost.ProgramOptions, konsol uygulamaları için komut satırı seçeneklerini ayrıştırmayı kolaylaştıran bir kitaplıktır. Grafik kullanıcı arayüzüne sahip uygulamalar geliştirirseniz, komut satırı seçenekleri genellikle önemli değildir.
+
+Komut satırı seçeneklerini Boost.ProgramOptions ile ayrıştırmak için aşağıdaki üç adım gereklidir:
+
+* Komut satırı seçeneklerini tanımlayın. Onlara isimler verin ve hangilerinin bir değere ayarlanabileceğini belirtin. Bir komut satırı seçeneği key/value çifti olarak ayrıştırılırsa, değerin türünü de ayarlarsınız - örneğin, ister string ister sayı olsun.
+
+* Komut satırını değerlendirmek için ayrıştırıcı kullanın. Komut satırını, genellikle *argc* ve *argv* olarak adlandırılan main() parametresinden alırsınız.
+
+* Ayrıştırıcı tarafından değerlendirilen komut satırı seçeneklerini saklayın. Boost.ProgramOptions, komut satırı seçeneklerini key/value çiftleri olarak kaydeden *std::map*'den türetilmiş bir sınıf sunar. Daha sonra, hangi seçeneklerin kaydedildiğini ve değerlerinin ne olduğunu kontrol edebilirsiniz.
+
+Boost.ProgramOptions kullanmak için boost/program_options.hpp satırını dosyaya ekleyin. Bu kütüphaneden tüm sınıflara ve fonksiyonlara boost::program_options ad alanında erişebilirsiniz.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/program_options.hpp>
+#include <iostream>
+
+using namespace boost::program_options;
+
+void on_age(int age)
+{
+    std::cout << "On age: " << age << '\n';
+}
+
+int main(int argc, const char *argv[])
+{
+    try
+    {
+        options_description desc{"Options"};//Komut satırı seçeneklerini tanımlamak için
+        // boost::program_options::options_description sınıfını kullanılır
+        desc.add_options()//add_options(), boost::program_options::options_description türündeki bir nesneyi temsil eden bir proxy nesnesi döndürür
+//Proxy nesnesinin türü önemli değil. Proxy nesnesinin birçok komut satırı seçeneğini tanımlamayı basitleştirir.
+                ("help,h", "Help screen")
+                ("pi", value<float>()->default_value(3.14f), "Pi")
+                ("age", value<int>()->notifier(on_age), "Age");
+        //proxy nesnesinin yardımıyla üç komut satırı seçeneğini tanımlar. İlk komut satırı seçeneği --help'dir.
+        // Bu seçeneğin açıklaması “Help screen” olarak ayarlanmıştır. Seçenek, bir name/value çifti değil, bir anahtardır.
+        // Komut satırında --help ayarlayabilir veya atlayabilirsiniz. --help değerini bir değere ayarlamak mümkün değildir
+
+        variables_map vm;
+        store(parse_command_line(argc, argv, desc), vm);
+        /*vm değişkeni boost::program_options::store() fonksiyonu ikinci bir parametre olarak geçirir.
+        vm, boost::program_options::variable_map türünde bir nesnedir. Bu sınıf std::map std::string,
+       boost::program_options::variable_value sınıfından türetilir ve böylece std::map ile aynı fonksiyonları sağlar.*/
+        notify(vm);
+        /*vm'ye erişilmeden ve count() çağrılmadan önce boost::program_options::notify() çağrılır.
+         Bu fonksiyon, on_age() gibi notifier() kullanılarak bir değere bağlanan fonksiyonları tetikler.
+         Boost::program_options::notify () olmadan on_age() çağrılmaz.*/
+
+        if (vm.count("help"))
+            std::cout << desc << '\n';
+        else if (vm.count("age"))
+            std::cout << "Age: " << vm["age"].as<int>() << '\n';//as(): Komut satırı seçeneğinin değerini şablon parametresi
+            // olarak geçirilen türe dönüştürür. as(), tür dönüşümü için boost::any_cast () kullanır.
+        else if (vm.count("pi"))
+            std::cout << "Pi: " << vm["pi"].as<float>() << '\n';
+        /*if'lerde vm'yi belirli bir komut satırı seçeneğinin olup olmadığını kontrol etmenizi sağlar ve ayrıca komut satırı
+         seçeneğinin ayarlandığı değere erişmenizi sağlar*/
+    }
+    catch (const error &ex)
+    {
+        std::cerr << ex.what() << '\n';//catch 'e girerse hatayı yazar
+    }
+}
+----
+
+Ekran Çıktısı:
+
+ Pi: 3.14
+
+
+Komut satırı seçeneklerini tanımlamak için boost::program_options::options_description sınıfını kullanılır. Bu tür bir nesne, kullanılabilir komut satırı seçeneklerine genel bakış görüntülemek için std::cout gibi bir ifade ile yazılabilir. Yapıcıya iletilen dize, genel bakışa komut satırı seçenekleri için başlık görevi gören bir ad verir.
+
+boost::program_options::options_description, boost::program_options::option_description türünde bir parametre bekleyen *add()* fonksiyonunu tanımlar. 
+
+add_options(), boost::program_options::options_description türündeki bir nesneyi temsil eden bir proxy nesnesi döndürür. Proxy nesnesinin türü önemli değil. Proxy nesnesinin birçok komut satırı seçeneğini tanımlamayı basitleştirir. Bir komut satırı seçeneği tanımlamak için gerekli verileri iletmek üzere çağırabileceğiniz aşırı yüklenmiş operator() fonksiyonu kullanır. Bu fonksiyon, aynı proxy nesnesine bir başvuru döndürerek operator() birden çok kez çağrı yapmanıza olanak tanır.
+
+Örnekte, proxy nesnesinin yardımıyla üç komut satırı seçeneğini tanımlar. İlk komut satırı seçeneği --help'dir. Bu seçeneğin açıklaması “Help screenı” olarak ayarlanmıştır. Seçenek, bir name/value çifti değil, bir anahtardır. Komut satırında --help ayarlayabilir veya atlayabilirsiniz. --help değerini bir değere ayarlamak mümkün değildir.
+
+operator() fonksiyonuna iletilen ilk dizenin “help, h” olduğunu unutmayın. Komut satırı seçenekleri için kısa adlar belirleyebilirsiniz. Kısa ad yalnızca bir harften oluşmalı ve virgülle belirtilmelidir. Artık yardım --help veya -h ile görüntülenebilir.
+
+--Help dışında iki komut satırı seçeneği daha tanımlanmıştır: --pi ve --age. Bu seçenekler anahtar değildir, name/value çiftleridir. --Pi ve --age değerlerinin bir değere ayarlanmasını bekler.
+
+Bir seçeneği name/value çifti olarak tanımlamak için ikinci parametre olarak boost::program_options::value_semantic türündeki bir nesneye bir işaretçi iletirsiniz. Doğrudan boost::program_options::value_semantic sitesine erişmeniz gerekmez. Boost::program_options::value_semantic türünde bir nesne yaratan boost::program_options::value() yardımcı fonksiyonunu kullanabilirsiniz. boost::program_options::value(), daha sonra operator() kullanarak proxy nesnesine iletebileceğiniz nesnenin adresini döndürür.
+
+boost::program_options::value(), komut satırı seçenek değerinin türünü şablon parametresi olarak alan bir fonksiyon şablonudur. Bu nedenle, --age komut satırı seçeneği bir tam sayı ve --pi bir kayan nokta sayısı bekler.
+
+Boost::program_options::value() 'den döndürülen nesne, bazı yararlı fonksiyonlar sağlar. Örneğin, varsayılan bir değer sağlamak için default_value() fonksiyonunu çağırabilirsiniz. Örnekte, komut satırında bu seçenek kullanılmazsa --pi değerini 3.14 olarak ayarlar.
+
+*notifier()*  fonksiyonu bir komut satırı seçeneğinin değerine bağlar. Bu fonksiyon daha sonra komut satırı seçeneğinin değeriyle çağrılır. Örnekte, on_age() fonksiyonu --age ile bağlantılıdır. Bir yaş ayarlamak için --age komut satırı seçeneği kullanılıyorsa, yaş, onu standart çıktıya yazan on_age() fonksiyonunu geçirilir.
+
+On_age() gibi fonksiyonlarla değerlerin işlenmesi isteğe bağlıdır. Değerlere başka şekillerde erişmek mümkün olduğundan notifier() kullanmanıza gerek yoktur.
+
+Tüm komut satırı seçenekleri tanımlandıktan sonra ayrıştırıcı kullanırsınız. Örnekte, komut satırı ayrıştırmak için boost::program_options::parse_command_line() yardımcı fonksiyonu çağrılır. Bu fonksiyon, komut satırını tanımlayan argc ve argv'yi ve seçenek açıklamalarını içeren desc'i alır. boost::program_options::parse_command_line(), boost::program_options::parsed_options türündeki bir nesnede ayrıştırılmış seçenekleri döndürür. Bu nesneye genellikle doğrudan erişemezsiniz. Bunun yerine, ayrıştırılmış seçenekleri bir container'da depolayan boost::program_options::store() fonksiyonuna iletirsiniz.
+
+Örnekte, vm'yi boost::program_options::store() fonksiyonu ikinci bir parametre olarak geçirir. vm, boost::program_options::variable_map türünde bir nesnedir. Bu sınıf std::map std::string, boost::program_options::variable_value sınıfından türetilir ve böylece std::map ile aynı fonksiyonları sağlar. Örneğin, belirli bir komut satırı seçeneğinin kullanılıp kullanılmadığını ve kapta depolandığını kontrol etmek için count() öğesini çağırabilirsiniz.
+
+Örnekte, vm'ye erişilmeden ve count() çağrılmadan önce boost::program_options::notify() çağrılır. Bu fonksiyon, on_age() gibi notifier() kullanılarak bir değere bağlanan fonksiyonları tetikler. Boost::program_options::notify () olmadan on_age() çağrılmaz.
+
+vm, belirli bir komut satırı seçeneğinin olup olmadığını kontrol etmenizi sağlar ve ayrıca komut satırı seçeneğinin ayarlandığı değere erişmenizi sağlar. Değerin türü, boost::program_options::variable_value, dahili olarak boost olan bir sınıftır. Boost::any türündeki bir nesneyi value() fonksiyonu ile alabilirsiniz.
+
+Örnekte as() değil, value() olarak çağırır. Bu fonksiyon, komut satırı seçeneğinin değerini şablon parametresi olarak geçirilen türe dönüştürür. as(), tür dönüşümü için boost::any_cast () kullanır.
+
+as() olarak ilettiğiniz türün, komut satırı seçeneğinin türüyle eşleştiğinden emin olun. Örneğin, Örnekte, komut satırı seçeneğinin --age int türünde bir dizi olarak ayarlanmasını beklediğinden int'in şablon parametresi olarak as() olarak geçirilmesi gerekir.
+
+
+

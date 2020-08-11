@@ -1,0 +1,70 @@
+== Boost.Tuple
+
+Boost.Tuple kütüphanesi, std::pair'in genelleştirilmiş bir sürümü olan boost::tuple adlı bir sınıf sağlar. std::pair tam olarak iki değeri saklayabilse de boost::tuple kaç tane saklanacağını seçmenize izin verir.
+
+[IMPORTANT]
+====
+Standart kütüphane C + + 11'den beri std::tuple sınıfını sağlamıştır. C + + 11'i destekleyen bir geliştirme ortamıyla çalışıyorsanız Boost.Tuple'ı yok sayabilirsiniz, çünkü boost::tuple ve std::tuple aynıdır.
+====
+
+Boost::tuple kullanmak için boost/tuple/tuple.hpp başlık satırı dosyanın başına eklenir. Akışı olan tuples kullanmak için boost/tuple/tuple_io.hpp satırı dosyanın başına eklenir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_io.hpp>
+#include <string>
+#include <iostream>
+
+int main()
+{
+    /*std::string türünde bir string ve int türünde bir değer içeren bir typedef oluşturulur.
+    Bu typedef bir hayvanın adını ve bacak sayısını saklar.*/
+    typedef boost::tuple<std::string, int> animal;
+    animal a{"cat", 4};
+    std::cout << a << '\n';
+    /* Hayvan türü, std::pair'i kullansada, boost::tuple türündeki nesneler bir akışa yazılabilir.
+     Bunu yapmak için gerekli işleçleri sağlayan boost/tuple/tuple_io.hpp başlık dosyasını eklemeniz gerekir. */
+
+    typedef boost::tuple<std::string, int, bool> animal2;
+    animal2 b{"cat", 4, true};
+    std::cout << std::boolalpha << b << '\n';
+
+    /*Örneğin ikinci kısmında bir isim, bacak sayısı ve hayvanın kuyruğu olup olmadığını gösteren bir struct bulunur.
+     Üç değerin tümü bir tuple içine yerleştirilir. animal2 typedef'den türetilen b yazdırılır*/
+
+    std::string s = "cat";
+    std::cout.setf(std::ios::boolalpha);
+    std::cout << boost::make_tuple(boost::ref(s), 4, true) << '\n';
+    /*Boost::make_tuple() yardımcı fonksiyonunu kullanarak bir tuple(demet) oluşturabilirsiniz.
+    make_tuple()  std::pair için std::make_pair() yardımcı fonksiyonu gibi çalışır
+    Referans oluşturmak için Boost.Ref 'den boost::ref() fonksiyonu kullanılır.
+    Sabit bir referans oluşturmak için boost::cref() kullanılır*/
+}
+----
+
+Ekran Çıktısı:
+
+ (cat 4)
+ (cat 4 true)
+ (cat 4 true)
+
+
+
+Boost::tuple, std::pair ile aynı şekilde kullanılır. Örnekte, std::string türünde bir string ve int türünde bir değer içeren bir typedef oluşturulur. Bu typedef bir hayvanın adını ve bacak sayısını saklar. Hayvan türü, std::pair'i kullansada, boost::tuple türündeki nesneler bir akışa yazılabilir. Bunu yapmak için gerekli işleçleri sağlayan boost/tuple/tuple_io.hpp başlık dosyasını eklemeniz gerekir. 
+
+
+Örneğin ikinci kısmında bir isim, bacak sayısı ve hayvanın kuyruğu olup olmadığını gösteren bir struct bulunur. Üç değerin tümü bir tuple içine yerleştirilir. 
+
+
+*boost::make_tuple() :* Fonksiyonunu kullanarak bir tuple(demet) oluşturabilirsiniz. make_tuple()  std::pair için std::make_pair() yardımcı fonksiyonu gibi çalışır
+    
+Referans oluşturmak için Boost.Ref 'den *boost::ref()* fonksiyonu kullanılır.
+Sabit bir referans oluşturmak için *boost::cref()* kullanılır.
+
+
+
+

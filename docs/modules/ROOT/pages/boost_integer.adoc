@@ -1,0 +1,86 @@
+== Boost.Integer
+
+Boost.Integer, tamsayılar için özelleştirilmiş türleri tanımlayan boost/cstdint.hpp başlık dosyasını sağlar. Bu tanımlar C99 standardından kaynaklanmaktadır. Bu, 1999'da yayımlanan C programlama dili standardının bir sürümüdür. C + + standardının ilk sürümü 1998'de yayınlandığından, C99'da tanımlanan özel tamsayı türlerini içermez.
+
+C99, stdint.h başlık dosyasındaki türleri tanımlar. Bu başlık dosyası C + + 11 içine alındı. C + + 'da buna cstdint denir. Geliştirme ortamınız C + + 11'i destekliyorsa, cstdint'e erişebilirsiniz ve boost/cstdint.hpp'yi kullanmanız gerekmez.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/cstdint.hpp>
+#include <iostream>
+
+int main()
+{
+    boost::int8_t i8 = 1;
+    std::cout << sizeof(i8) << '\n';//8 bit veri içererek sonucu verir
+
+#ifndef BOOST_NO_INT64_T
+    boost::uint64_t ui64 = 1;
+    std::cout << sizeof(ui64) << '\n';//16 bit veri içererek sonucu verir
+#endif
+
+    boost::int_least8_t il8 = 1;
+    std::cout << sizeof(il8) << '\n';//en az biti içerir.
+
+    boost::uint_least32_t uil32 = 1;
+    std::cout << sizeof(uil32) << '\n';//en az biti içerir.
+
+    boost::int_fast8_t if8 = 1;
+    std::cout << sizeof(if8) << '\n';
+
+    boost::uint_fast16_t uif16 = 1;
+    std::cout << sizeof(uif16) << '\n';
+}
+----
+
+Ekran Çıktısı:
+ 
+ 1
+ 8
+ 1
+ 4
+ 1
+ 8
+
+
+Boost/cstdint.hpp dosyasındaki türler, ad alanı takviyesinde tanımlanır. Üç bölüme ayrılabilirler:
+
+Boost::int8_t ve boost::uint64_t gibi türler, adlarında tam bellek boyutunu taşır. Bu nedenle, boost::int8_t tam olarak 8 bit içerir ve boost::uint64_t tam olarak 64 bit içerir.
+
+Boost::int_least8_t ve boost::uint_least32_t gibi türler, adlarının söylediği kadar en az bit içerir. Boost::int_least8_t bellek boyutunun 8 bit'ten büyük olması ve boost::uint_least32_t bellek boyutunun 32 bit'ten büyük olması mümkündür.
+
+Boost::int_fast8_t ve boost::uint_fast16_t gibi türlerin de minimum boyutu vardır. Gerçek boyutları en iyi performansı garanti eden bir değere ayarlanmıştır. Örnekte, Visual C + + 2013 ile derlendi ve 64 bit Windows 7 sisteminde çalıştırıldığında sizeof (uif16) için 4 görüntüler.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/cstdint.hpp>
+#include <iostream>
+
+int main()
+{
+  boost::intmax_t imax = 1;
+  std::cout << sizeof(imax) << '\n';//8
+
+  std::cout << sizeof(UINT8_C(1)) << '\n';//4
+
+#ifndef BOOST_NO_INT64_T
+  std::cout << sizeof(INT64_C(1)) << '\n';//8
+#endif
+}
+----
+
+Ekran Çıktısı:
+ 
+ 8
+ 4
+ 8
+
+
+Boost.Integer, bir platformda kullanılabilen maksimum genişlik tamsayı türleri için boost::intmax_t ve boost::uintmax_t olmak üzere iki tür tanımlar.
+
+Ayrıca Boost.Integer, tamsayıları belirli türlerde değişmez olarak kullanmak için kullanım sağlar. C + + kodunda bir tamsayı yazılırsa, varsayılan olarak int türünü kullanır ve en az 4 bayt ayırır. UINT8_C ve INT64_C gibi, tamsayılar için asgari boyutun değişmez olarak ayarlanmasını sağlar. Örnekte, sizeof (UINT8_C (1)) için en az 1 ve sizeof (INT64_C (1)) için en az 8 döndürür.
+

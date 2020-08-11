@@ -1,0 +1,37 @@
+== Boost.LexicalCast
+
+Boost.LexicalCast, sayıları int veya double gibi sayısal türlere veya tam tersine
+çevirebilen bir boost işlecidir. boost::lexical_cast ile değişken tip dönüşümünü sağlar.
+
+*Boost ::lexical_cast :*, C ++ 11'deki standart kütüphaneye eklenen std::stoi (), std::stod () ve std::to_string () gibi fonksiyonlara bir alternatiftir.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/lexical_cast.hpp>
+#include <string>
+#include <iostream>
+
+
+using namespace std;
+
+int main()
+{
+    string sayi = boost::lexical_cast<string>(123);
+    cout << sayi << endl;
+    double sayi2 = boost::lexical_cast<double>(sayi);//int olan sayi değişkenini double'a çevirir ve sayi2 değişkenine atar.
+    cout << sayi2 << endl;
+}
+----
+
+
+Ekran Çıktısı: 
+ 123
+ 123
+ 
+cast operatörü boost::lexical_cast, farklı tiplerdeki sayıları dönüştürebilir. Örnekte önce tamsayı 123'ü bir dizgeye dönüştürür, sonra dizgiyi kayan nokta sayısına dönüştürür. Boost::lexical_cast kullanmak için, boost / lexical_cast.hpp başlık dosyasını ekleyin.
+
+Boost::lexical_cast, dönüştürmeyi gerçekleştirmek için dahili olarak akışları kullanır.
+Bu nedenle, yalnızca aşırı yüklenmiş operatör ve operatör bulunan tipler dönüştürülebilir.
+Bununla birlikte, boost::lexical_cast, daha verimli bir dönüşüm uygulamak için belirli türler için optimize edilebilir.

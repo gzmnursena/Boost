@@ -1,0 +1,69 @@
+== Boost.Any
+
+C + + gibi güçlü yazılan diller, her değişkenin ne tür bilgileri depolayabileceğini tanımlayan belirli bir türe sahip olmasını gerektirir. JavaScript gibi diğer diller, geliştiricilerin her türlü bilgiyi bir değişkende saklamasına olanak tanır. Örneğin, JavaScript'te tek bir değişken bir dize, sonra bir sayı ve daha sonra bir boolen değeri içerebilir.
+
+Boost.Any, boost::any JavaScript değişkenleri gibi rastgele bilgi depolayabilen sınıf sağlar.
+
+
+Boost::Any kullanmak için boost/any.hpp satırını dosyanın başına ekleyin. Boost::any türündeki nesneler daha sonra rastgele bilgileri saklamak için oluşturulabilir. 
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/any.hpp>
+#include <iostream>
+
+int main()
+{
+    boost::any veriable1 = 1;
+    veriable1= 3.14;
+    veriable1 = true;//bir int, sonra bir double, sonra bir bool tipinde değişken tutar.
+
+    boost::any veriable2 = std::string{"Boost"};//Boost::any değişkeninin değerine erişmek için cast operatörü
+    // boost::any_cast kullanılır
+
+    //Buradan anlaşıldığı gibi boost::any tipindeki değişkenler boost::any_cast operatoru ile kullanılırlar.
+    boost::any veriable3 = 1;
+    std::cout << boost::any_cast<int>(veriable3) << '\n';//boost::any_cast<int> tipindeki değişkeni yazar
+    //integer'a dönüştürerek yazar
+    veriable3 = 3.14;
+    std::cout << boost::any_cast<double>(veriable3) << '\n';//boost::any_cast<double> tipindeki değişkeni yazar
+    //double'a dönüştürerek yazar
+    veriable3 = true;
+    std::cout << std::boolalpha << boost::any_cast<bool>(veriable3) << '\n';//boost::any_cast<bool> tipindeki değişkeni yazar
+    //bool'a dönüştürerek yazar
+
+    std::cout<<"----\n";
+    try
+    {
+        boost::any a = 1;
+        std::cout << boost::any_cast<float>(a) << '\n';//int floata dönüştürülür
+    }
+    catch (boost::bad_any_cast &e)//geçersiz bir tür belirtilirse, boost::bad_any_cast türünde bir istisna atılır.
+    {
+        std::cerr << e.what() << '\n';//hatayı yazar
+    }
+
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 3.14
+ true
+ ----
+ boost::bad_any_cast: failed conversion using boost::any_cast
+
+
+Örnekte, bir int, sonra bir double, sonra bir bool tutar.
+
+Boost::type değişkenleri, depolayabilecekleri şeylerde tamamen sınırsız değildir; Çok az da olsa bazı önkoşullar vardır. Boost::any türünde bir değişkende saklanan herhangi bir değer kopyalanabilir olmalıdır. Bu nedenle, C dizileri kopyalanamaz olduğundan bir C dizisini saklamak mümkün değildir.*(örneği yukarıda)*
+
+
+Örneğin son kısmında boost::any_cast için uygun parametre şablon parametresi olarak iletilerek, değişkenin değeri dönüştürülür. Geçersiz bir tür belirtilirse, boost::bad_any_cast türünde bir istisna atılır.
+
+
+

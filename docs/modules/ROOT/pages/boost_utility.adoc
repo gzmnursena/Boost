@@ -1,0 +1,58 @@
+== Boost.Utility
+
+Boost.Utility kütüphanesi, tek başına kütüphanelerde muhafaza edilmesini haklı gösteremeyecek kadar küçük olan çeşitli, yararlı sınıflar ve fonksiyonların bir araya gelmesidir. Yardımcı programlar küçük ve hızlı bir şekilde öğrenilebilirken, tamamen ilgisizdir. Diğer bölümlerdeki örneklerden farklı olarak, buradaki kod örnekleri birbirinden bağımsız değildir, çünkü bunlar bağımsız yardımcı programlardır.
+
+Çoğu yardımcı program boost/utility.hpp dosyasında tanımlanmış olsa da, bazılarının kendi başlık dosyaları vardır. Aşağıdaki örnekler, tanıtılan yardımcı program için uygun başlık dosyasını içerir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/checked_delete.hpp>
+#include <boost/intrusive/list.hpp>
+#include <string>
+#include <utility>
+#include <iostream>
+
+//boost::intrusive::list_base_hook ile struct oluşturma
+struct animal : public boost::intrusive::list_base_hook<>
+{
+  std::string name_;
+  int legs_;
+
+  animal(std::string name, int legs) : name_{std::move(name)},
+    legs_{legs} {}
+};
+
+int main()
+{
+  animal *a = new animal{"cat", 4};//animal struct'ına özellik gönderildi.
+
+  /* Boost.Intrusive sınıfındaki boost::intrusive::list tarafından sağlanan pop_back_and_dispose()  fonksiyonuna
+   boost::checked_delete() fonksiyonu bir parametre olarak iletir. Boost::intrusive::list ve pop_back_and_dispose(),
+  boost::checked_delete(), Boost.Utility tarafından sağlanır ve boost/checked_delete.hpp içinde tanımlanır.*/
+
+  typedef boost::intrusive::list<animal> animal_list;
+  animal_list al;
+
+  al.push_back(*a);
+
+  al.pop_back_and_dispose(boost::checked_delete<animal>);
+  /*boost::checked_delete() tek parametre olarak silinecek nesneye bir işaretçi olarak bekler.
+  pop_back_and_dispose(), karşılık gelen nesneyi yok etmek için bir işaretçi alan bir fonksiyon beklediğinden,
+   boost::checked_delete() fonksiyonundan geçiş yapmak mantıklıdır, bu şekilde benzer bir fonksiyon tanımlamanız gerekmez.
+  boost.Utility ayrıca dizileri yok etmek için kullanılabilecek boost::checking_array_delete() fonksiyonunnu sağlar. delete[] yerine kullanılır.
+ Buna ek olarak, boost :: checking_deleter ve boost :: checking_array_deleter adlı iki sınıf, sırasıyla boost :: checking_delete () ve boost :: checking_array_delete () gibi davranan işlev nesneleri oluşturmak için kullanılabilir.*/
+  std::cout << al.size() << '\n';//boost::intrusive::list'in boyutunu yazdırır. önceden boyutlandırıp sildiği için 0 sonucunu verir.
+
+
+}
+----
+
+Ekran Çıktısı:
+
+ 0
+
+
+

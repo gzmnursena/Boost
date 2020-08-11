@@ -1,0 +1,61 @@
+== Boost.NumericConversion
+
+
+Boost.NumericConversion kütüphanesi, bir sayısal türdeki sayıları farklı bir sayısal türe dönüştürmek için kullanılabilir.
+
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/numeric/conversion/cast.hpp>
+#include <iostream>
+
+int main()
+{
+    //try-catch bloğu olduğu için burayı en son çalıştırır
+    int i = 0x10000;
+    short s = i;
+    std::cout << s << '\n';//int tipindeki değişkeni short veri tipine dönüştürerek yazar.
+    //cast operatörleri kullanılmadığı için dönüşümü doğru bir şekilde yapamaz. sonuc olarak hep 0 verir.
+    
+
+
+    try
+    {
+        int i = 0x10000;
+        short s = boost::numeric_cast<short>(i);//pozitif int'i short'a çevirirken casting operatörlerini kullanılarak dönüşüm yapılır
+        std::cout << s << '\n';
+    }
+    catch (boost::numeric::bad_numeric_cast &e)//pozitif sayılar için exception durumuna düşer.
+    {
+        std::cerr << e.what() << '\n';//hatayı yazar
+    }
+
+    try
+    {
+        int i = -0x10000;
+        short s = boost::numeric_cast<short>(i);//negatif int'i short'a çevirirken casting operatörlerini kullanılarak dönüşüm yapılır
+        std::cout << s << '\n';
+    }
+    catch (boost::numeric::negative_overflow &e)//negatif sayılar için exception durumuna düşer.
+    {
+       std::cerr << e.what() << '\n';//hatayı yazar
+    }
+}
+----
+
+
+Ekran Çıktısı:
+
+ 0
+ bad numeric conversion: positive overflow
+ bad numeric conversion: negative overflow 
+
+
+Boost::numeric_cast tam olarak mevcut C + + cast operatörleri gibi kullanılır. cast operatörlerini kullanmak için başlık dosyasına boost/numeric/conversion/cast.hpp satırı eklenmelidir.
+
+Boost::numeric_cast, C + + ile aynı dönüşümü yapar, ancak dönüştürülen değeri değiştirmeden dönüştürmenin gerçekleşip gerçekleşmeyeceğini doğrular. Örnekte, bu doğrulama başarısız olur ve 0x10000 kısa tür değişkenine yerleştirilemeyecek kadar büyük olduğu için boost::numeric::bad_numeric_cast türünde bir istisna atılır.
+
+Kesin olarak, boost::numeric::positive_overflow türünde bir istisna atılır. Bu tür bir taşmayı belirtir (bu durum pozitif sayılar için). Negatif sayılar için taşmayı belirten boost::numeric::negative_overflow da vardır.
+

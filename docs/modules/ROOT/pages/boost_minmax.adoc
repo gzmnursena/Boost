@@ -1,0 +1,55 @@
+== Boost.MinMax
+
+Boost.MinMax, yalnızca bir fonksiyon çağrısını kullanarak minimum ve maksimum iki değeri bulmak için bir algoritma sağlar; bu, std::min() ve std::max() ifadelerini çağırmaktan daha verimlidir.
+
+MinMax, C + + 11'in bir parçasıdır. Geliştirme ortamınız C + + 11'i destekliyorsa, bu Boost kitaplığındaki algoritmaları dosya başına ekleyerek kullanabilirsiniz.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/algorithm/minmax.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/algorithm/minmax_element.hpp>
+#include <iostream>
+#include <array>
+
+
+int main()
+{
+    int i = 2;
+    int j = 1;
+
+    boost::tuples::tuple<const int&, const int&> t = boost::minmax(i, j);// boost::minmax ile 2 elemanın max-min değeri bulunur
+
+    std::cout << t.get<0>() << '\n';//1. eleman minimum değeri yaza
+    std::cout << t.get<1>() << '\n';//2. eleman maximum değeri yazar
+
+    std::cout <<"---\n";
+
+    typedef std::array<int, 4> array;//4 elemanlı in tipinde typedef dizi
+    array dizi{{2, 3, 0, 1}};//dizinin elemanlar atanır
+
+    std::pair<array::iterator, array::iterator> p =
+            boost::minmax_element(dizi.begin(), dizi.end());//dizinin başlangıç elemanından bitiş elemanına kadar olan tüm elemanlar dizye gönderilir
+    //boost::minmax_element iki ifade içeren bir std::pair döndürür, ilk eleman minimumu, ikinci eleman ise maksimum değeri tutar.
+
+    std::cout << *p.first << '\n';//1. eleman minimum değeri yazar
+    std::cout << *p.second << '\n';//2. eleman maximum değeri yazar
+}
+----
+
+Ekran Çıktısı:
+
+ 1
+ 2
+ ---
+ 0
+ 3
+
+Boost::minmax(), iki nesnenin minimum ve maksimum değerlerini hesaplar. Hem std::min() hem de std::max() yalnızca bir değer döndürürken, boost::minmax() iki değer döndürür. Gruptaki ilk değer minimumu, ikinci değer ise maksimumu verir.
+
+Boost::minmax() 'dan farklı olarak, boost::minmax_element() iki ifade içeren bir std::pair döndürür. İlk değer minimum ve ikinci değer maksimumu verir.
+
+Boost::minmax_element(), boost/algorithm/minmax_element.hpp ile dosya başında tanımlanır.
+

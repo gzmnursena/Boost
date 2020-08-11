@@ -1,0 +1,139 @@
+== Boost.DateTime
+
+Boost.DateTime kütüphanesi, takvim tarihleri ​​ve saatleri gibi saat verilerini işlemek için kullanılabilir. Buna ek olarak, Boost.DateTime, saat dilimlerini hesaba katmak için uzantılar sağlar ve takvim tarih ve saatlerinin biçimlendirilmiş giriş ve çıkışlarını destekler.
+
+Örneğin;
+
+[source,c++]
+----
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <iostream>
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <iostream>
+
+using namespace boost::gregorian;
+using namespace std;
+
+int main()
+{
+  date tarih{2020, 1, 30};//boost::gregorian::date  kütüpnesi tarih tanımlamak için kullanılır.
+  cout <<"yıl: "<< tarih.year() << endl;//yılı verir
+  cout <<"ay: "<< tarih.month() << endl;//ayı verir
+  cout <<"gun: "<< tarih.day() << endl;//günü rakamsal verir
+  cout <<"gunun adi: "<< tarih.day_of_week() << endl;//günün ismini verir
+  cout <<"uzun tarih: "<< tarih.end_of_month() << endl;//uzun tarihi yıl-ay-gun olarak yazar
+
+  cout<< "--------------"<< endl;
+  
+  date tarih2 = day_clock::universal_day();
+  cout << tarih2.year() << endl;//bugunun yılını verir
+  cout << tarih2.month() << endl;//bugunun ayını verir
+  cout << tarih2.day() << endl<< endl;//bugunun gununu verir
+  //universal_day() fonksiyonu, saat dilimlerinden ve yaz saatinden bağımsız bir UTC tarihi döndürür.
+  //bugünün yıl-ay-gun olarak yazdırır
+  cout<< "--------------"<< endl;
+
+  tarih2 = date_from_iso_string("20140131");
+  cout << tarih2.year() << endl;
+  cout << tarih2.month() << endl;
+  cout << tarih2.day() << endl<< endl;
+  //date_from_iso_string fonksiyonu, string olarak yıl-ay-gun olarak verilen tarihi parçalayarak yazdırır
+  //verilen tarihi yıl-ay-gun olarak yazdırır
+  cout<< "--------------"<< endl;
+
+  date date1{2014, 1, 31};
+  date date2{2014, 2, 28};
+  date_duration dd = date2 - date1;//iki tarih arasındaki farkı verir
+  cout << dd.days() << endl<< endl;//iki tarih arasındaki farkın gun sayisini ekrana yazar
+  cout<< "--------------"<< endl;
+
+  date_duration tarih3{4};
+  cout << tarih3.days() << endl;//gun sayisini yazdirir
+  weeks ws{4};//güne dört hafta atar
+  cout << ws.days() << endl;//gun sayisini yazdirir
+  months ms{4};//aya dört atar
+  cout << ms.number_of_months() << endl;//ay sayisini yazdirir
+  years ys{4};//yila dört atar
+  cout << ys.number_of_years() << endl<< endl;//yil sayisini yazdirir
+  cout<< "--------------"<< endl;
+
+  date d{2014, 1, 31};
+  months ms2{1};
+  date d2 = d + ms2;//uzun tarih ile ayı toplar
+  cout << d2 << endl;//yeni tarihi yazdırır
+  date d3 = d2 - ms2;//yeni olusturulan tarihten 1 ay çıkartır
+  cout << d3 << endl<< endl;//yeni tarihi yazdirir
+  cout<< "--------------"<< endl;
+
+  date_period dp{date1, date2};//date_period: iki tarih arasindaki araligi verir
+  date_duration dd2 = dp.length();//yukarıda bulunan aralıgın uzunlugunu verir
+  cout << dd2.days() << endl;//tarihin gunun yazdirir
+  cout<< "--------------"<< endl;
+
+  std::cout.setf(std::ios::boolalpha);//sonucu 0-1 olarak değilde true-false olarak verir
+  cout << dp.contains(date1) << endl;
+  cout << dp.contains(date2) << endl;
+  /*contains() öğesini çağırarak belirli bir tarihin dönem içinde olup olmadığını kontrol eder.
+  date2 dönemin sonunu tanımlasa da, dönemin bir parçası olarak değerlendirilmediğine dikkat edin.
+  Bu nedenle,  date1 ile çağrıldığında true değerini ve date2 ile çağrıldığında false değerini döndürür.*/
+}
+----
+
+Ekran Çıktısı:
+
+ yıl: 2020
+ ay: Jan
+ gun: 30
+ gunun adi: Thu
+ uzun tarih: 2020-Jan-31
+ --------------
+ 2020
+ Jan
+ 29
+ --------------
+ 2014
+ Jan
+ 31
+ --------------
+ 28
+ --------------
+ 4
+ 28
+ 4
+ 4
+ --------------
+ 2014-Feb-28
+ 2014-Jan-31
+ --------------
+ 28
+ --------------
+ true
+ false
+ 
+
+
+*date.year():* Yılı verir.
+
+*date.month():* Ayı verir.
+   
+*date.day():* Günü rakamsal olarak verir.
+
+*date.day_of_week():* Günün ismini verir.
+
+*date.end_of_month():* Uzun tarihi yıl-ay-gun olarak verir.
+
+*date_from_iso_string():* Bu fonksiyon, string olarak yıl-ay-gun olarak verilen tarihi parçalayarak yazdırır.
+
+*date.days():* Gün sayısını verir.
+  
+*date.number_of_months()* Ay sayısını verir.
+  
+*date.number_of_years():* Yıl sayısını verir.
+
+universal_day() fonksiyonu, saat dilimlerinden ve yaz saatinden bağımsız bir UTC tarihi döndürür. UTC, evrensel zamanın uluslararası kısaltmasıdır. Boost::gregorian::day_clock ayrıca local_day() adında yerel ayarları dikkate alan bir üye işlevi de sağlar. Yerel saat dilimi içindeki geçerli tarihi almak için local_day() kullanır.
+
+Boost::gregorian, string olarak depolanan bir tarihi boost::gregorian::date türündeki bir nesneye dönüştürmek için bağımsız fonksiyonlar içerir. Yukarıdaki örnekte, boost::gregorian::date_from_iso_string() fonksiyonunu kullanarak tarihi ISO 8601 biçiminde dönüştürür.
+
+*contains():* fonksiyonu çağırılarak belirli bir tarihin dönem içinde olup olmadığını kontrol edilir.
+
+*date_period:* İki tarih arasindaki aralığı verir.
